@@ -1,0 +1,745 @@
+#!/bin/bash
+
+declare  ___STR_LIBRARY___=str
+
+declare -a ___ASCII=(
+[0]='Null' [1]='SOH' [2]='STX' [3]='ETX' [4]='EOT' [5]='ENQ' [6]='ACK' [7]='BEL' [8]='BS' [9]='HT' [10]='LF' [11]='VT' [12]='FF' [13]='CR' [14]='SO' [15]='SI' [16]='DLE' [17]='D1' [18]='D2' [19]='D3' [20]='D4' [21]='NAK' [22]='SYN' [23]='ETB' [24]='CAN' [25]='EM' [26]='SUB' [27]='ESC' [28]='FS' [29]='GS' [30]='RS' [31]='US' [32]='SPC' [33]='!' [34]='“' [35]='#' [36]='$' [37]='%' [38]='&' [39]='‘' [40]='(' [41]=')' [42]='*' [43]='+' [44]=',' [45]='–' [46]='.' [47]='/' [48]='0' [49]='1' [50]='2' [51]='3' [52]='4' [53]='5' [54]='6' [55]='7' [56]='8' [57]='9' [58]=':' [59]=';' [60]='<' [61]='=' [62]='>' [63]='?' [64]='@' [65]='A' [66]='B' [67]='C' [68]='D' [69]='E' [70]='F' [71]='G' [72]='H' [73]='I' [74]='J' [75]='K' [76]='L' [77]='M' [78]='N' [79]='O' [80]='P' [81]='Q' [82]='R' [83]='S' [84]='T' [85]='U' [86]='V' [87]='W' [88]='X' [89]='Y' [90]='Z' [91]='[' [92]='\' [93]=']' [94]='^' [95]='_' [96]='`' [97]='a' [98]='b' [99]='c' [100]='d' [101]='e' [102]='f' [103]='g' [104]='h' [105]='i' [106]='j' [107]='k' [108]='l' [109]='m' [110]='n' [111]='o' [112]='p' [113]='q' [114]='r' [115]='s' [116]='t' [117]='u' [118]='v' [119]='w' [120]='x' [121]='y' [122]='z' [123]='{' [124]='|' [125]='}' [126]='~' [127]='Delete' [128]='Ç' [129]='ü' [130]='é' [131]='â' [132]='ä' [133]='à' [134]='å' [135]='ç' [136]='ê' [137]='ë' [138]='è' [139]='ï' [140]='î' [141]='ì' [142]='Ä' [143]='Å' [144]='É' [145]='æ' [146]='Æ' [147]='ô' [148]='ö' [149]='ò' [150]='û' [151]='ù' [152]='ÿ' [153]='Ö' [154]='Ü' [155]='ø' [156]='£' [157]='Ø' [158]='×' [159]='ƒ' [160]='á' [161]='ù' [162]='ó' [163]='ú' [164]='ñ' [165]='Ñ' [166]='ª' [167]='º' [168]='¿' [169]='®' [170]='¬' [171]='½' [172]='¼' [173]='¡' [174]='«' [175]='»' [176]='░' [177]='▒' [178]='▓' [179]='│' [180]='┤' [181]='Á' [182]='Â' [183]='À' [184]='©' [185]='╣' [186]='║' [187]='╗' [188]='╝' [189]='¢' [190]='¥' [191]='┐' [192]='└' [193]='┴' [194]='┬' [195]='├' [196]='─' [197]='┼' [198]='ã' [199]='Ã' [200]='╚' [201]='╔' [202]='╩' [203]='╦' [204]='╠' [205]='═' [206]='╬' [207]='¤' [208]='ð' [209]='Ð' [210]='Ê' [211]='Ë' [212]='È' [213]='ı' [214]='Í' [215]='Î' [216]='Ï' [217]='┘' [218]='┌' [219]='█' [220]='▄' [221]='¦' [222]='Ì' [223]='▀' [224]='Ó' [225]='ß' [226]='Ô' [227]='Ò' [228]='õ' [229]='Õ' [230]='µ' [231]='þ' [232]='Þ' [233]='Ú' [234]='Û' [235]='Ù' [236]='ý' [237]='Ý' [238]='¯' [239]='´' [240]='­­' [241]='±' [242]='‗' [243]='¾' [244]='¶' [245]='§' [246]='÷' [247]='¸' [248]='°' [249]='¨' [250]='·' [251]='¹' [252]='³' [253]='²' [254]='■' [255]=''
+)
+
+declare -a ___STR___=(
+	[0]="str.len     '(string)'"
+	[1]="str.replace '(expression,find,replacement,start,count,compare)'"
+	[2]="str.rev     '(string)'"
+	[3]="str.comp    '(string1,string2,compare)'"
+	[4]="str.copy    '(variable1,variable2,length)'"
+	[5]="str.cat     '(destinarion,source, length)'"
+	[5]="str.mod     '(string,start,length)'"
+	[6]="str.left    '(string,length)'"
+	[7]="str.right   '(string,length)'"
+	[8]="str.upper   '(string)'"
+	[9]="str.lower   '(string)'"
+	[10]="str.inchar '(string1,string2,compare)'"
+	[11]="str.split  '(string,delimiter,compare)'"
+	[12]="str.dup    '(string,count)'"
+	[13]="str.cut	 '(string,char,field)'"
+	[14]="str.asc	 '(char)'"
+	[15]="str.char	 '(code)'"
+)
+
+function str.__FUNCTIONS__()
+{
+	echo "Biblioteca: $___STR_LIBRARY___"
+	echo -n "Funções: "
+	echo ${___STR___[@]} | sed "s/\( '([a-z,0-9]\{1,\})'\)//g;s/ /, /g"
+	return 0
+
+}
+
+function str.__SINTAX__()
+{
+	echo "Biblioteca: $___STR_LIBRARY___"
+	echo "Sintaxe:"
+	echo ${___STR___[@]} | sed "s/)'/&\n/g;s/^/ /g"
+	
+	return 0
+}
+
+function str.__NAME__()
+{
+	echo $___STR_LIBRARY___
+	return 0
+}
+
+function str.__HELP__()
+{
+	[[ $# -eq 0 ]] && echo "$___STR_LIBRARY___: $FUNCNAME: Requer nome da função." && return 1
+	
+	for ___args___ in ${@}
+	do
+		case $___args___ in
+			me)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Sobre: A biblioteca '$___STR_LIBRARY___' contém procedimentos usados para executar operações de cadeia de caracteres."
+				;;
+			str.len)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão de String válida."
+				echo "Retorno: integer"
+				echo "Descrição: Retorna um inteiro contendo o número de caracteres em uma cadeia de caracteres."
+				echo
+				;;
+			str.rev)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão de String válida."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres em que a ordem de caracteres de uma cadeia de caracteres especificada é invertida."
+				echo
+				;;
+			str.replace)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(expression,find,replacement,start,count,compare)'"
+				echo "Parametros:"
+				echo "expression"
+				echo "		Obrigatório. Seqüência de caracteres que contém a subseqüência de caracteres para substituir."
+				echo "find"
+				echo "		Obrigatório. Subseqüência sendo procurada."
+				echo "replacement"
+				echo "		Obrigatório. Subseqüência de substituição."
+				echo "start"
+				echo "		Opcional. A posição dentro de Expression que inicia uma subcadeia de caracteres usada para substituição.O valor de retorno de Replace é uma cadeia"
+				echo "		de caracteres que começa em Start, com substituições apropriadas.Se omitido, 0 será adotado."
+				echo "count"
+				echo "		Opcional. Número de subseqüências a executar.Se for omitido, o valor padrão será – 1, o que significa 'fazer todas as substituições possíveis'."
+				echo "compare"
+				echo "		Opcional. Tipo de comparação usada para avaliar substrings"
+				echo "Tipos do argumento 'compare':"
+				echo "		binary - Executa uma comparação binária"
+				echo "		text   - Executa uma comparação textual"
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres na qual uma subcadeia de caracteres especificada foi substituída por outra subcadeia de caracteres um determinado número de vezes."
+				echo
+				;;
+			str.comp)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string1,string2,compare)'"
+				echo "Parametros:"
+				echo "string1"
+				echo "		Obrigatório. Expressão de String válida."
+				echo "string2"
+				echo "		Obrigatório. Expressão de String válida."
+				echo "Tipos do argumento 'compare':"
+				echo "		binary - Executa uma comparação binária"
+				echo "		text   - Executa uma comparação textual"
+				echo "Retorno: boolean"
+				echo "Descrição: Retorna true ou false, com base no resultado de uma comparação de cadeia de caracteres."
+				echo
+				;;
+			str.copy)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(variavel1,variavel2,comprimento)'"
+				echo "Descrição: Copia o valor de variavel1 para variavel2."
+				echo "Retorno: null"
+				echo "variavel1 = Nome da variavel1"
+				echo "variavel2 = Nome da variavel2"
+				echo "[Opcional]: comprimento  = Define o comprimento a ser copiado."
+				echo "0 = Comprimento total da string."
+				echo
+				;;
+			str.cat)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(destino,origem,comprimento)'"
+				echo "Descrição:  Copia (concatena) 'comprimento' elementos da string 'origem' no final da string 'destino'."
+				echo "Retorno: string"
+				echo "destino = Sequência de caracteres."
+				echo "origem = Sequência de caracteres."
+				echo "[Opcional]: comprimento  = Define o comprimento da string 'origem' a ser concatenado."
+				echo "0 = Comprimento total da string."
+				echo
+				;;
+			str.mod)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,start,length)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão de String de que os caracteres mais à esquerda são retornados."
+				echo "start"
+				echo "		Obrigatório. Expressão numérica. Iniciando posição dos caracteres a serem retornados.Se Start for maior que o número de caracteres em string,"
+				echo "		a função de $___args___ retorna uma cadeia de caracteres de comprimento zero (''). Start é baseado em um."
+				echo "length "
+				echo "		Obrigatório. Expressão numérica indicando quantos caracteres para retornar.Se for zero, uma cadeia de caracteres de comprimento zero ('')"
+				echo "		Será retornada.Se maior ou igual ao número de caracteres em string, a cadeia de caracteres completa será retornada."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres que contém todos os caracteres a partir de uma posição e tamnho especificada em uma cadeia de caracteres."
+				echo
+				;;
+			str.left)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,length)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão de String de que os caracteres mais à esquerda são retornados."
+				echo "length "
+				echo "		Obrigatório. Expressão numérica indicando quantos caracteres para retornar.Se for zero, uma cadeia de caracteres de comprimento zero ('')"
+				echo "		Será retornada.Se maior ou igual ao número de caracteres em string, a cadeia de caracteres completa será retornada."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres contendo um número especificado de caracteres do lado esquerdo de uma cadeia de caracteres."
+				echo
+				;;
+			str.right)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,length)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão de String de que os caracteres mais à direita são retornados."
+				echo "length "
+				echo "		Obrigatório. Expressão numérica indicando quantos caracteres para retornar.Se for zero, uma cadeia de caracteres de comprimento zero ('')"
+				echo "		Será retornada.Se maior ou igual ao número de caracteres em string, a cadeia de caracteres completa será retornada."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres contendo um número especificado de caracteres do lado direito de uma cadeia de caracteres."
+				echo
+				;;
+			str.upper)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão string."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres ou um caractere com a cadeia de caracteres especificada convertida para maiúsculas."
+				echo
+				;;
+			str.lower)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão string."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres ou um caractere com a cadeia de caracteres especificada convertida para minúsculas."
+				echo
+				;;
+			str.inchar)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string1,string2,compare)'"
+				echo "Parametros:"
+				echo "string1"
+				echo "		Obrigatório. Expressão String que está sendo pesquisada."
+				echo "string2"
+				echo "		Obrigatório. Caracter buscado."
+				echo "compare"
+				echo "		Opcional. Especifica o tipo de comparação de cadeias de caracteres. Se Compare é omitido, a configuração determina o tipo de comparação."
+				echo "Tipos do argumento 'compare'"
+				echo "		text	- Executa uma comparação textual. (padrão)"
+				echo "		binary	- Executa uma comparação binária."
+				echo "Retorno: string"
+				echo "Descrição: Retorna um inteiro especificando a posição de início da primeira ocorrência de uma cadeia de caracteres dentro da outra."
+				echo
+				;;
+			str.split)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,delimiter,compare)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão que contém subcadeia de caracteres e delimitadores."
+				echo "delimiter"
+				echo "		Obrigatório. Qualquer caractere ou sequência de caracteres usado para identificar limites subseqüência de caracteres."
+				echo "compare"
+				echo "		Opcional. Especifica o tipo de comparação de cadeias de caracteres. Se Compare é omitido, a configuração determina o tipo de comparação."
+				echo "Tipos do argumento 'compare'"
+				echo "		text	- Executa uma comparação textual. (padrão)"
+				echo "		binary	- Executa uma comparação binária."
+				echo "Retorno: array string"
+				echo "Descrição: Retorna uma matriz unidimensional baseada em zero contendo um número especificado de subcadeias." 
+				echo
+				;;
+			str.dup)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,count)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão que contém subcadeia de caracteres e delimitadores."
+				echo "count"
+				echo "		Obrigatório. Expressão Inteira. O comprimento da cadeia de caracteres a ser retornada."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma cadeia de caracteres ou o objeto que consiste no caractere especificado repetido o número de vezes especificado." 
+				echo
+				;;
+			str.cut)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(string,delimiter,field)'"
+				echo "Parametros:"
+				echo "string"
+				echo "		Obrigatório. Expressão que contém subcadeia de caracteres e delimitadores."
+				echo "delimiter"
+				echo "		Obrigatório. Qualquer caractere ou sequência de caracteres usado para identificar limites subseqüência de caracteres."
+				echo "field"
+				echo "		Obrigatório. Número da coluna que será exibida."
+				echo "Retorno: string"
+				echo "Descrição: Retorna uma coluna dentro de uma cadeia de caracteres, separada pelo seu delimitador." 
+				echo
+				;;
+			str.asc)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(char)'"
+				echo "Parametros:"
+				echo "char"
+				echo "		Obrigatório. Qualquer Char válido."	
+				echo "Retorno: integer"
+				echo "Descrição: Retorna um valor Integer que representa o código de caractere correspondente a um caractere." 
+				echo
+				;;
+			str.char)
+				echo "Biblioteca: $___STR_LIBRARY___"
+				echo "Função: $___args___"
+				echo "Sintaxe: $___args___ '(code)'"
+				echo "Parametros:"
+				echo "char"
+				echo "		Obrigatório. Uma expressão de Integer que representam code point, ou código de caractere, o caractere."	
+				echo "Retorno: char"
+				echo "Descrição: Retorna o caractere associado ao código de caractere especificado." 
+				echo
+				;;
+			*)
+				echo "$___STR_LIBRARY___: $FUNCNAME: '$___args___' Função não encontrada."
+				echo
+				;;
+		esac
+	done
+
+	return 0			
+				
+}
+
+function str.len()
+{
+	# str.len '(string)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/&/p')"
+	declare ___get_args ___string
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/___string=\2/p')"
+		eval $___get_args
+		echo ${#___string}
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro."
+		return 1
+	fi
+	return 0
+}
+
+function str.rev()
+{
+	# str.rev '(string)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/&/p')"
+	declare ___get_args
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/___string=\2/p')"
+		eval $___get_args
+		echo "$___string" | sed 's/./&\n/g' | tac | sed -e :a -e 'N;s/\n//g;ta'
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro."
+		return 1
+	fi
+	return 0
+}
+
+
+function str.replace()
+{
+	# str.replace '(expression,find,replacement,start,count,compare)
+	declare ___sintax_regex="$(echo "$1" |	sed  -n 's/\(^(\)\(".*"\),\(".*"\),\(".*"\)\(,\{1\}[0-9]\{,3\}\)\?\(,\{1\}[0-9]\{,3\}\)\?\(,\{1\}[a-zA-Z]\{1,\}\)\?)$/&/p')"
+	declare ___get_args ___start ___count ___compare ___sed_cmd 
+	
+	if [ -n "$___sintax_regex" ]; then
+	
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\),\(".*"\)\(,\{1\}[0-9]\{,3\}\)\?\(,\{1\}[0-9]\{,3\}\)\?\(,\{1\}[a-zA-Z]\{1,\}\)\?)$/___expression=\2 ___find=\3 ___replacement=\4 ___start=\5 ___count=\6 ___compare=\7/p' | sed '/___start/s/,//;/___count/s/,//;/___compare/s/,//')"
+		
+		eval $___get_args 
+		
+		___start=${___start:=0}
+		___count=${___count:=g}
+		___compare=${___compare:=text}
+	
+		[ "$___count" == 0 ] && echo "$___STR_LIBRARY___: $FUNCNAME: Count: '$___count' Argumento não pode ser zero." >&2 && return 1
+		
+		if [ $___compare == text ]; then
+			___compare='I'
+		elif [ $___compare == binary ]; then
+			unset ___compare
+		else
+			echo "$___STR_LIBRARY___: $FUNCNAME: Compare: '$___compare' Opção inválida." >&2
+			return 1
+		fi
+					
+		___sed_cmd="echo "${___expression:$___start:${#___expression}}" | sed 's/$___find/$___replacement/$___compare$___count'"
+		eval $___sed_cmd 	
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	
+	return 0	
+		
+}
+
+function str.comp()
+{
+	# str.comp '(string1,string2,compare)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[a-zA-Z]\{1,\}\)\?)$/&/p')"
+	declare ___string1 ___string2 ___compare ___get_args
+
+	if [ -n "$___sintax_regex" ]; then
+		
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[a-zA-Z]\{1,\}\)\?)$/___string1=\2 ___string2=\3 ___compare=\4/p' | sed '/___compare/s/,//')"
+		eval $___get_args 
+		
+		___compare=${___compare:=text}
+
+		if [ "$___compare" == text ]; then
+			[ "$(str.upper '("$___string1")')" == "$(str.upper '("$___string2")')" ] && echo true || echo false
+		elif [ "$___compare" == binary ]; then
+			[ "$___string1" == "$___string2" ] && echo true || echo false
+		else
+			echo "$___STR_LIBRARY___: $FUNCNAME: Compare: '$___compare' Opção inválida." >&2
+			return 1
+		fi
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro."
+		return 1
+	fi
+	
+	return 0	
+}
+
+function str.copy()
+{
+	declare ___sintax_regex="$(echo "$1" | egrep   '^\({1}[[:alnum:]]{1,}[,]{1}[[:alnum:]]{1,}([,]{1}[-|+]{1}?[[:digit:]]{1,})?\){1}$' | sed 's/^(//;s/)$//')"
+	declare ___var_1="$(echo "$___sintax_regex" | cut -d',' -f1)"
+	declare ___var_2="$(echo "$___sintax_regex" | cut -d',' -f2)"
+	declare ___lenght="$(echo "$___sintax_regex" | cut -d',' -f3)"
+	
+	[[ $___lenght -eq 0 ]] && ___lenght="$(str.len "($(eval "echo \$$___var_1"))")"
+
+	if [ -n "$___sintax_regex" ]; then
+		eval "$___var_2=$(echo \${$___var_1:0:$___lenght})"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+}
+
+function str.cat()
+{
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[0-9]\{,3\}\)\?)$/&/p')"
+	declare ___get_args 
+
+	if [ -n "$___sintax_regex" ]; then
+	
+		___get_args=$(echo "$1" |  sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[0-9]\{,3\}\)\?)$/___expression_1=\2 ___expression_2=\3 ___lenght=\4/p' | sed '/___lenght/s/,//')
+		eval $___get_args
+		
+		[[ $___lenght -eq 0 ]] && ___lenght="$(str.len "($(eval "echo $___expression_2"))")"
+
+		echo "$___expression_1${___expression_2:0:$___lenght}"
+			
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0	
+}
+
+function str.mod()
+{
+	# str.mod(string,inicial,comprimento)
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\),\([0-9]\{,3\}\))$/&/p')"
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\),\([0-9]\{,3\}\))$/___expression=\2 ___start_pos=\3 ___lenght=\4/p')"
+		eval $___get_args
+		echo "${___expression:$___start_pos:$___lenght}"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+}
+
+function str.left()
+{
+	# str.left '(string,comprimento)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/&/p')"
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/___expression=\2 ___left_length=\3/p')"
+		eval $___get_args
+		
+		[[ $___left_length -gt ${#___expression} ]] && ___left_length=${#___expression}
+		echo "${___expression:0:$___left_length}"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+
+	
+}
+
+function str.right()
+{
+	# str.left '(string,comprimento)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/&/p')"
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/___expression=\2 ___right_length=\3/p')"
+		eval $___get_args
+
+		[[ $___right_length -gt ${#___expression} ]] && ___right_length=${#___expression}
+
+		echo "${___expression:$((${#___expression} - ___right_length))}"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+
+	
+}
+
+function str.upper()
+{
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/&/p')"
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/___expression=\2/p')"
+		eval $___get_args
+		
+		echo "$___expression" | tr '[:lower:]' '[:upper:]'
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+}
+
+function str.lower()
+{
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/&/p')"
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\))$/___expression=\2/p')"
+		eval $___get_args
+		
+		echo "$___expression" | tr '[:upper:]' '[:lower:]'
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+}
+
+function str.inchar()
+{
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\("."\)\(,[a-z]\{1,\}\)\?)$/&/p')"
+	declare ___get_args
+	declare ___vetor
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed -n 's/\(^(\)\(".*"\),\("."\)\(,[a-z]\{1,\}\)\?)$/___string1=\2 ___string2=\3 ___compare=\4/p' | sed '/___compare/s/,//')"
+		eval $___get_args
+
+		___compare=${___compare:=text}
+		
+		if [ "$___compare" == text ]; then
+			for ___vetor in $(seq 0 ${#___string1})
+			do
+				if [ "$(echo "$___string2" | tr '[:lower:]' '[:upper:]')" == "$(echo "${___string1:$___vetor:1}" | tr '[:lower:]' '[:upper:]')" ]; then
+					echo $___vetor
+					break
+				fi
+			done
+		elif [ "$___compare" == binary ]; then
+			for ___vetor in $(seq 0 ${#___string1})
+			do
+				if [ "$___string2" == "${___string1:$___vetor:1}" ]; then
+					echo $___vetor
+					break
+				fi
+			done
+		else
+			echo "$___STR_LIBRARY___: $FUNCNAME: Compare: '$___compare' Opção inválida." >&2
+			return 1
+		fi
+		
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+	
+}
+
+function str.split()
+{
+	# str.split '(string,delimiter,compare)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[a-z]\{1,\}\)\?)$/&/p')"
+	declare ___string ___delimiter ___compare ___get_args ___sed_cmd
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\(".*"\)\(,[a-z]\{1,\}\)\?)$/___string=\2 ___delimiter=\3 ___compare=\4/p' | sed 's/___compare=,/___compare=/')"
+		eval $___get_args	
+
+		___compare=${___compare:=text}
+
+		if [ "$___compare" == text ]; then
+			___compare='I'
+		elif [ "$___compare" == binary ]; then
+			unset ___compare
+		else
+			echo "$___STR_LIBRARY___: $FUNCNAME: Compare: '$___compare' Opção inválida." >&2
+			return 1
+		fi
+		
+		___delimiter="$(echo "$___delimiter" | sed 's/[[:punct:]]/\\&/g;s/\\?/?/g')"
+	
+		echo "$___string" |  sed "s/\(.*\)/('&')/;s/$___delimiter\{2,\}//$___compare g;s/$___delimiter/' '/$___compare g"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0
+}
+
+function str.dup()
+{
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/&/p')"
+	declare ___string ___count ___get_args ___string_tmp ___cont
+
+	if [ -n "$___sintax_regex" ]; then
+	
+		___get_args="$(echo "$1" |  sed  -n 's/\(^(\)\(".*"\),\([0-9]\{,3\}\))$/___string=\2 ___count=\3/p')"
+		
+		eval $___get_args
+			
+		if [ "$___count" -gt 255 ]; then
+			echo "$___STR_LIBRARY___: $FUNCNAME: Count: '$___count' Limite máximo excedido." >&2
+			return 1
+		elif [ "$___count" -lt 1 ]; then
+			echo "$___STR_LIBRARY___: $FUNCNAME: Count: '$___count' Limite mínimo excedido." >&2
+			return 1
+		fi
+		
+		for ((___cont=1;___cont<=$___count;___cont++)); do ___string_tmp=$___string_tmp$___string; done
+		
+		echo "$___string_tmp"
+		
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0
+}
+
+function str.cut()
+{
+	# str.cut '(string,delimiter,field)'
+	declare ___sintax_regex="$(echo "$1" | sed  -n 's/\(^(\)\(".*"\),\("."\),\([0-9]\{,3\}\))$/&/p')"
+	declare ___string ___field ___get_args ___char
+
+	if [ -n "$___sintax_regex" ]; then
+	
+		___get_args="$(echo "$1" |  sed  -n 's/\(^(\)\(".*"\),\("."\),\([0-9]\{,3\}\))$/___string=\2 ___char=\3 ___field=\4/p')"
+		eval $___get_args
+	
+		if [ "$___field" -lt 1 ]; then
+			echo "$___STR_LIBRARY___: $FUNCNAME: Count: '$___field' Limite mínimo excedido." >&2
+			return 1
+		fi
+
+		echo "$___string" | cut -d"$___char" -f$___field	
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0
+	
+}
+
+function str.asc()
+{
+	declare ___sintax_regex="$(echo $1 | sed  -n 's/\(^(\)\("."\))$/&/p')"
+	declare ___code ___char
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo $1 | sed  -n 's/\(^(\)\("."\))$/___char=\2/p')"
+		eval $___get_args
+		
+		for ___code in {0..255}
+		do
+			[ "$___char" == "${___ASCII[$___code]}" ] && echo $___code && return 0
+		done
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0
+}
+
+function str.char()
+{
+	declare ___sintax_regex="$(echo $1 | sed  -n 's/\(^(\)\([0-9]\{,3\}\))$/&/p')"
+	declare ___code
+	
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo $1 | sed  -n 's/\(^(\)\([0-9]\{,3\}\))$/___code=\2/p')"
+		eval $___get_args
+		
+		if [ "$___code" -gt 255 ]; then
+			echo "$___STR_LIBRARY___: $FUNCNAME: Code: '$___code' Limite máximo excedido." >&2
+			return 1
+		fi
+		echo "${___ASCII[$___code]}"
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+
+	return 0
+}
+
+function str.mask()
+{
+	declare ___sintax_regex="$(echo "$1" | sed -n 's/\(^(\)\(".*"\),\(".*"\))$/&/p')"
+	declare ___code ___string ___mask ___str_tmp ___str_vetor ___mask_vetor __get_args
+
+	if [ -n "$___sintax_regex" ]; then
+		___get_args="$(echo $1 | sed  -n 's/\(^(\)\(".*"\),\(".*"\))$/___string=\2 ___mask=\3/p')"
+		eval $___get_args
+
+		for ___mask_vetor in $(seq 0 $((${#___mask}-1)))
+		do
+			if [ "${___mask:$___mask_vetor:1}" == "#" ]; then
+				___str_tmp=$___str_tmp${___string:$___str_vetor:1}
+				((___str_vetor++))
+			else
+				___str_tmp=$___str_tmp${___mask:$___mask_vetor:1}
+			fi
+		done
+		echo $___str_tmp 
+	else
+		echo "$___STR_LIBRARY___: '$FUNCNAME ${@}' Sintaxe erro." >&2
+		return 1
+	fi
+	return 0
+}
+
+
