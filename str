@@ -12,10 +12,10 @@
 # Substituição de uma subcadeia de caracteres;
 # Concatenação de strings;
 # Obter posição de um caracter em uma cadeia de caracteres;
-# Converção de uma string para maiúsculas;
-# Converção de uma string para minúsculas;
+# Conversão de uma string para maiúsculas;
+# Conversão de uma string para minúsculas;
 # Dividir uma cadeia de string apartir de um delimitador;
-# Repetir um caracter em um determinado número de vezes;
+# Repetir uma string em um determinado número de vezes;
 # Obter o código ASCII de um caracter;
 # Obter um caracter apartir do seu código ASCII
 # Define colunas apartir de um delimitador;
