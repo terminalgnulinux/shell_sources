@@ -560,7 +560,7 @@ function str.align()
 	# Se '__Column' estiver vazia, define o número de colunas atual do terminal
 	# Se '__Align' estiver vazai, define alinhamento a esquerda.
 	__Column=${__Column:-$(tput cols)}
-    __Align=${__Align:-"left"}
+	__Align=${__Align:-"left"}
 
 	# Verifica o número de argumentos passados
 	if [ ${#@} -gt 3 ]; then
