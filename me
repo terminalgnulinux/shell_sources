@@ -49,15 +49,12 @@ function me.__SESSION__(){ echo $XDG_SESSION_DESKTOP; return 0; }
 function me.__NAME__() { echo $__ME_LIBRARY__; }
 function me.__LIST__() { echo ${__ME_LIST__[*]}; }
 
-#trap 'echo ‘$BASH_COMMAND’ failed with error code $?' ERR
-
-#function error_exit()
-#{
-    # error_exit biblioteca linha função mensagem
-    # Se a mensagem de erro não for passada em '$3', exibe a mensagem default
- #   echo "$__SCRIPT__: linha $1: $2: ${3:-"Erro desconhecido."}" 1>&2
-#	exit 1
-#}
+function error_exit()
+{
+	error_exit biblioteca linha função mensagem
+    	echo "$__SCRIPT__: linha $1: $2: ${3:-"Erro desconhecido."}" 1>&2
+	exit 1
+}
 
 function me.__HELP__()
 {
