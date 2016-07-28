@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source err
+source me
 
 if term.__INIT__ 2>/dev/null; then
 	return 1; fi
