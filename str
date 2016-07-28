@@ -2,8 +2,9 @@
 
 # -----------------------------------------------------------------------------
 #   Biblioteca: str (string)
-#   Criado por: x_SHAMAN_x
+#   Criado por: Juliano Santos
 #   Data: 10 de Julho de 2016
+#	Email: juliano.santos.bm@gmail.com
 #  
 #   A biblioteca contém funções para manipulação de strings e expressões,
 #   no intuito de agilizar a automatizar o tratamento de cadeias de 
@@ -15,22 +16,68 @@
 #
 #   str.len, str.rev, str.split, str.replace, str.asc, str.chr, str.format
 #	str.instr, str.tolower, str.toupper, str.left, str.right, str.comp,
-#	str.dup, str.mod, str.cat, str.align
+#	str.dup, str.mod, str.cat, str.ncat, str.isdigit, str.isalpha, str.isupper
+#	str.islower, str.isalnum str.filter
 #
 #   DOC:
 #
 #   A documentação da biblioteca está contida no arquivo 'str.hlp' no
 #   diretório 'src'.
 # ------------------------------------------------------------------------------
+# Exit error
+# set -e
 
-# Importa biblioteca de documentação
+# Bibliotecas externas
 source me
 
-# Nome da biblioteca 
-export __STR_NAME__=str
+# Checa se a biliboteca já foi inicializada.
+if str.__INIT__ 2>/dev/null ; then
+	return 1; fi
 
-# Array com nome das funções
-export -a __STR_LIST__=(str.len
+# Inicialização
+function str.__INIT__() { return 0; }
+function str.__NAME__() { echo $__STR_LIBRARY__; }
+function str.__LIST__() { echo ${__STR_LIST__[*]}; }
+function str.__CMD__(){ echo ${__STR_CMD__[*]}; }
+#--------------------------------------------------------------------------------
+# Constantes
+declare -r __STR_LIBRARY__=str
+# Método de comparação de strings.
+# Passando como argumento nas funções, irá definir como a comparação entre strings
+# seram intepretada.
+# Tipos: METHOD_COMPARE_BINARY, METHOD_COMPARE_TEXT
+# Notas:
+#     	TEXT:	A diferença entre maíusculas e minúsculas seram ignoradas.
+#				Será feita um conversão entre as strings para a mesma formatação,
+#				tornando ambas iguais.
+#		BINARY:	Haverá diferença entre caracteres maiúsculos e minúsculos.
+#				Argumentos não seram convertidos e suas formatações mantidas.
+declare -ir METHOD_COMPARE_BINARY=1
+declare -ir METHOD_COMPARE_TEXT=2
+
+# Base de notação da tabela ASCII
+# Os caracteres poderam ser represetados por seus respectivos códigos.
+# Códigos: DECIMAL, BINARIO, OCTAL E HEXADECIMAL
+#			 DEC      BIN     OCT       HEX
+declare -ir ASCII_DEC=1
+declare -ir ASCII_OCT=2
+declare -ir ASCII_HEX=3
+
+# <str.filter>: Filtros
+declare -ir FLT_ALNUM=1
+declare -ir FLT_ALPHA=2
+declare -ir FLT_CNTRL=3
+declare -ir FLT_DIGIT=4
+declare -ir FLT_GRAPH=5
+declare -ir FLT_LOWER=6
+declare -ir FLT_PUNCT=7
+declare -ir FLT_UPPER=8
+declare -ir FLT_PRINT=9
+
+
+# Comandos
+declare -ar __STR_CMD__=(
+str.len
 str.rev
 str.split
 str.replace
@@ -46,29 +93,43 @@ str.comp
 str.dup
 str.mod
 str.cat
-str.align
+str.ncat
+str.isdigit
+str.isalpha
+str.isupper
+str.islower
+str.isalnum
+str.filter
 )
 
-
-# Tabela ASCII
-# Lista dos caracteres, onde o índice dos Vetores é a representação decimal de cada caracter.
-export -a __ASCII=(
-[0]='Null' [1]='SOH' [2]='STX' [3]='ETX' [4]='EOT' [5]='ENQ' [6]='ACK' [7]='BEL' [8]='BS' [9]='HT' [10]='LF' [11]='VT' [12]='FF' [13]='CR' [14]='SO' [15]='SI' [16]='DLE' [17]='D1' [18]='D2' [19]='D3' [20]='D4' [21]='NAK' [22]='SYN' [23]='ETB' [24]='CAN' [25]='EM' [26]='SUB' [27]='ESC' [28]='FS' [29]='GS' [30]='RS' [31]='US' [32]=' ' [33]='!' [34]='“' [35]='#' [36]='$' [37]='%' [38]='&' [39]='‘' [40]='(' [41]=')' [42]='*' [43]='+' [44]=',' [45]='–' [46]='.' [47]='/' [48]='0' [49]='1' [50]='2' [51]='3' [52]='4' [53]='5' [54]='6' [55]='7' [56]='8' [57]='9' [58]=':' [59]=';' [60]='<' [61]='=' [62]='>' [63]='?' [64]='@' [65]='A' [66]='B' [67]='C' [68]='D' [69]='E' [70]='F' [71]='G' [72]='H' [73]='I' [74]='J' [75]='K' [76]='L' [77]='M' [78]='N' [79]='O' [80]='P' [81]='Q' [82]='R' [83]='S' [84]='T' [85]='U' [86]='V' [87]='W' [88]='X' [89]='Y' [90]='Z' [91]='[' [92]='\' [93]=']' [94]='^' [95]='_' [96]='`' [97]='a' [98]='b' [99]='c' [100]='d' [101]='e' [102]='f' [103]='g' [104]='h' [105]='i' [106]='j' [107]='k' [108]='l' [109]='m' [110]='n' [111]='o' [112]='p' [113]='q' [114]='r' [115]='s' [116]='t' [117]='u' [118]='v' [119]='w' [120]='x' [121]='y' [122]='z' [123]='{' [124]='|' [125]='}' [126]='~' [127]='Delete' [128]='Ç' [129]='ü' [130]='é' [131]='â' [132]='ä' [133]='à' [134]='å' [135]='ç' [136]='ê' [137]='ë' [138]='è' [139]='ï' [140]='î' [141]='ì' [142]='Ä' [143]='Å' [144]='É' [145]='æ' [146]='Æ' [147]='ô' [148]='ö' [149]='ò' [150]='û' [151]='ù' [152]='ÿ' [153]='Ö' [154]='Ü' [155]='ø' [156]='£' [157]='Ø' [158]='×' [159]='ƒ' [160]='á' [161]='ù' [162]='ó' [163]='ú' [164]='ñ' [165]='Ñ' [166]='ª' [167]='º' [168]='¿' [169]='®' [170]='¬' [171]='½' [172]='¼' [173]='¡' [174]='«' [175]='»' [176]='░' [177]='▒' [178]='▓' [179]='│' [180]='┤' [181]='Á' [182]='Â' [183]='À' [184]='©' [185]='╣' [186]='║' [187]='╗' [188]='╝' [189]='¢' [190]='¥' [191]='┐' [192]='└' [193]='┴' [194]='┬' [195]='├' [196]='─' [197]='┼' [198]='ã' [199]='Ã' [200]='╚' [201]='╔' [202]='╩' [203]='╦' [204]='╠' [205]='═' [206]='╬' [207]='¤' [208]='ð' [209]='Ð' [210]='Ê' [211]='Ë' [212]='È' [213]='ı' [214]='Í' [215]='Î' [216]='Ï' [217]='┘' [218]='┌' [219]='█' [220]='▄' [221]='¦' [222]='Ì' [223]='▀' [224]='Ó' [225]='ß' [226]='Ô' [227]='Ò' [228]='õ' [229]='Õ' [230]='µ' [231]='þ' [232]='Þ' [233]='Ú' [234]='Û' [235]='Ù' [236]='ý' [237]='Ý' [238]='¯' [239]='´' [240]='­­' [241]='±' [242]='‗' [243]='¾' [244]='¶' [245]='§' [246]='÷' [247]='¸' [248]='°' [249]='¨' [250]='·' [251]='¹' [252]='³' [253]='²' [254]='■' [255]=''
+# Documentação
+declare -ar __STR_LIST__=(
+str.__INIT__
+str.__NAME__
+str.__LIST__
+str.__CMD__
+str.__HELP__
 )
 
-function error_exit()
-{
-	# error_exit biblioteca linha função mensagem
-	# Se a mensagem de erro não for passada em '$3', exibe a mensagem default
-	echo "$__STR_NAME__: linha $1: $2: ${3:-"Sintaxe erro."}" 1>&2
-	exit 1
-}
+# Inicializa array de referẽncia. Contendo o valor decimal dos caracteres imprimiveis
+# os Códigos são referenciados por seu caractere. 'a' = 97
+declare -Ar ASCII=(
+[' ']=32 ['!']=33 ['"']=34 ['#']=35 ['$']=36 ['%']=37 ['&']=38 ["'"]=39 ['(']=40 [')']=41 ['*']=42 ['+']=43 [',']=44 ['-']=45 ['.']=46 ['/']=47
+['0']=48 ['1']=49 ['2']=50 ['3']=51 ['4']=52 ['5']=53 ['6']=54 ['7']=55 ['8']=56 ['9']=57 [':']=58 [';']=59 ['<']=60 ['=']=61 ['>']=62 ['?']=63
+['@']=64 ['A']=65 ['B']=66 ['C']=67 ['D']=68 ['E']=69 ['F']=70 ['G']=71 ['H']=72 ['I']=73 ['J']=74 ['K']=75 ['L']=76 ['M']=77 ['N']=78 ['O']=79
+['P']=80 ['Q']=81 ['R']=82 ['S']=83 ['T']=84 ['U']=85 ['V']=86 ['W']=87 ['X']=88 ['Y']=89 ['Z']=90 ['[']=91 ['\']=92 [']']=93 ['^']=94 ['_']=95
+['`']=96 ['a']=97 ['b']=98 ['c']=99 ['d']=100 ['e']=101 ['f']=102 ['g']=103 ['h']=104 ['i']=105 ['j']=106 ['k']=107 ['l']=108 ['m']=109 ['n']=110
+['o']=111 ['p']=112 ['q']=113 ['r']=114 ['s']=115 ['t']=116 ['u']=117 ['v']=118 ['w']=119 ['x']=120 ['y']=121 ['z']=122 ['{']=123 ['|']=124 ['}']=125
+['~']=126
+)
+#---------------------------------------------------------------------------------
 
 function str.len()
 {
 	# str.len expressão
-	# Se o número de argumentos for maior que 1, chama 'error_exit'
-	[ ${#@} -gt 1 ] && 	error_exit $BASH_LINENO $FUNCNAME
+	# Max. Args: 1
+	# Checa o número de argumentos passados.
+	[ ${#@} -gt 1 ] && 	error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
 	
 	# Imprime comprimento da string
 	echo ${#1}
@@ -80,70 +141,57 @@ function str.len()
 function str.rev()
 {
 	# str.rev expressão
+	# Max. Args: 1
+	[ ${#@} -gt 1 ] && 	error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
 
-	# Se o argumento for nulo, chama 'error_exit'
-	# Se o número de argumentos for maior que 1, chama 'error_exit'
-	if [ ${#@} -gt 1 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "String requerida."
-	fi  
+	# Variaveis
+	local Expression="$1"
+		
+	# Verifica se a expressão é nula
+	[ ! "$Expression" ] && error_exit $BASH_LINENO $FUNCNAME "Expressão: Cadeia de caracteres não pode ser nula."
+
+	# Imprima saida invertida.
+	echo -e "$Expression" | rev 
 	
-	# Imprime
-	echo -e "$1" | rev 	
-
 	# status
+
 	return 0
 }
 
 function str.split()
 {
+	# str.split expressão delimitador variavel comparação
+	# Nax. Args: 4
+	# Opcional: 1
+	# Checa o número de argumentos passados. 
+	[ ${#@} -gt 4 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:5}' Excesso de argumentos."
 
-	# str.split expressão delimitador comparação variavel
-
-	# Variaveis locais
-	local __Delimiter
-	# Default
-	local __CompareType=${3:-"text"}
+	# Variaveis locais.
+	local Expression="$1"
+	local Delimiter="$2"
+	local Variable="$3"
+	local -i CompareType="${4:-$METHOD_COMPARE_BINARY}"  # Se "CompareType" for nula, define Valor padrão = 1
+	local CharS
 	
-	# Verifica se expressão não é nula e o delimitador é caractere único.
-	
-	# Checa o número de argumentos passado com a função.
-	# Se for maior que 4, sai da função
-	if [ ${#@} -gt 4 -o ${#@} -eq 0 ]; then
-			error_exit $BASH_LINENO $FUNCNAME
-
-	# Verifica se a expressão é nula
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão requerida."
-
-	# Checa se o delimitador não é nulo e se é um caractere único.
-	elif [ -n "$2" -a ${#2} -gt 1 ]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$2' O delimitador deve ser um único caractere."
-	
-	# Verifica o método de comparação é válido
-	# Se for omitido assume 'text' como padrão
-	elif [ "$__CompareType" == "binary" ]; then
-			__CompareType=''
-	elif [ "$__CompareType" == "text" ]; then
-			__CompareType='I'
+	# Trata os argumentos passados na função.
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Cadeia de caracteres não pode ser nula."
+	elif [ ! "$Delimiter" -o ${#Delimiter} -gt 1 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Delimitador: Precisa ser caractere único."
+	elif [ ! "$Variable" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Variável: Requer nome."
+	elif [ $CompareType -eq $METHOD_COMPARE_TEXT ]; then
+		CharS='I'
+	elif [ $CompareType -eq $METHOD_COMPARE_BINARY ]; then
+		CharS=''
 	else
-		# Se o método for inválido sai da função.
-		error_exit $BASH_LINENO $FUNCNAME "'$__CompareType' Método de comparação inválido."
+		error_exit $BASH_LINENO $FUNCNAME "Comparação: Valor do método inválido.";
 	fi
-
-	# Checa se o nome da variavel foi passada na função.
-	if [ -z "$4" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Requer variável."
-	fi
-
-	# Se delimitador for omitido, aplica 'espaço' como delimitador padrão	
-	__Delimiter=${2:-' '}
 	
 	# Monta a estrutura do array, separando os campos pelo seu delimitador, atribui a estrutura
 	# a variavel passada em '$4' e executa a estrutura para alocação dos elementos.
-	if ! eval $4=$(echo "$1" | sed "s/^/(\"/;s/$/\")/;s/$__Delimiter/\" \"/$__CompareType g") 2>/dev/null; then
-			error_exit $BASH_LINENO $FUNCNAME
+	if ! eval $Variable=$(echo "$Expression" | sed "s/^/(\"/;s/$/\")/;s/$Delimiter/\" \"/$CharS g") 2>/dev/null; then
+		error_exit $BASH_LINENO $FUNCNAME
 	fi
 
 	# status
@@ -153,35 +201,36 @@ function str.split()
 
 function str.replace()
 {
+	# sintaxe: str.replace expressão pesquisa substituição metodo
+	# Max Args: 4
+	# Opcional: 1
+	# Checa o número de argumentos passados
+	[ ${#@} -gt 4 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:5}' Excesso de argumentos."
+
 	# Variavel local
-	# Receberá o metodo de busca 
-	# default
-	local __CompareType=${4:-"text"}
+	local Expression="$1"
+	local Search="$2"
+	local Replace="$3"
+	local -i CompareType="${4:-$METHOD_COMPARE_BINARY}" # Se "CompareType for nula, define valor padrão = 1
+	local CharS
 	
-	# str.replace expressão procura substituição metodo
-	
-	# Verifica a quantidade de argumentos passados a função é superior a '4'. Se for, sai da função
-	# Checa se todos os argumentos obrigatórios foram passados.
-	# De todos o único que é opcional é o argumento 'metodo' que omitido assume o padrão 'text'
-	# ignorando a diferença entre maiúsculas e minúsculas.
-	if [ ${#@} -gt 4 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then											
-		error_exit $BASH_LINENO $FUNCNAME "Requer expressão."
-	elif [ -z "$2" ]; then 
-		error_exit $BASH_LINENO $FUNCNAME "Requer expressão a ser substituida."
-	elif [ -z "$3" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Requer expressão de substituição."
-	elif [ "$__CompareType" == "text" ]; then
-		__CompareType='I'
-	elif [ "$__CompareType" == "binary" ]; then
-		__CompareType=''
+	# Verifica e trata os argumentos passados na função.	
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Cadeia de caracteres não pode ser nula."
+	elif [ ! "$Search" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Pesquisa: Sequẽncia de caracteres não pode ser nula."
+	#elif [ ! "$Replace" ]; then
+	#	error_exit $BASH_LINENO $FUNCNAME "Subsituição: Sequẽncia de caracteres não pode ser nula."
+	elif [ $CompareType -eq $METHOD_COMPARE_TEXT ]; then
+		CharS='I'
+	elif [ $CompareType -eq $METHOD_COMPARE_BINARY ]; then
+		CharS=''
 	else
-		error_exit $BASH_LINENO $FUNCNAME "'$__CompareType' Método de comparação inválido."
+		error_exit $BASH_LINENO $FUNCNAME "Comparação: Valor do método inválido."
 	fi
 
 	# Aplica a substituição e imprime na saida. 
-	echo "$1" | sed "s/$2/$3/$__CompareType g"
+	echo "$Expression" | sed "s/$Search/$Replace/$CharS g"
 	
 	# status
 	return 0	
@@ -190,92 +239,110 @@ function str.replace()
 
 function str.asc()
 {
-	#str.asc caractere
+	# str.asc caractere base 
+	# Max. Args: 2
+	# Opcional: 1
+	# Checa o número de argumentos passados.
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+
 	# Variavel local
-	local __Code
-	
-	# Se o número de argumentos for maior que '1' sai da função
-	if [ ${#@} -gt 1 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	# Checa se é um único caractere
-	elif [ ${#1} -gt 1 ]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$1' Deve ser um único caractere."
+	local Char="$1"
+	local -i Base=${2:-$ASCII_DEC}	# Se "Base" for nula, define o valor padrão = 1
+
+	# Trata os argumentos passados na função
+	if [ ! "$Char" -o ${#Char} -gt 1 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Caractere: Deve ser caractere único."
+	elif [ $Base -eq $ASCII_DEC ]; then
+		printf "%d\r\n" ${ASCII["$Char"]} 		
+	elif [ $Base -eq $ASCII_OCT ]; then
+		printf "%03o\r\n" ${ASCII["$Char"]}
+	elif [ $Base -eq $ASCII_HEX ]; then
+		printf "x%02x\r\n" ${ASCII["$Char"]}
+	else
+		error_exit $BASH_LINENO $FUNCNAME "Base: Valor de base inválido."
 	fi
-
-	# Lẽ o indice dos elementos em ASCII
-	for __Code in $(seq 0 $((${#__ASCII[@]}-1)))
-	do
-		# Compara o 'caractere' passado na função com o 'caractere' contido no 'Code' do elementro do array em ASCII
-		# Se for iguais imprime a posição do elemento e finaliza o loop
-		# A posição do elemento é igual ao código decimal do caractere na tabela ASCII
-		if [ "$1" == "${__ASCII[$__Code]}" ]; then
-			echo $__Code
-			break
-		fi
-	done
-
+	
 	# status
 	return 0
 }
 
 function str.chr()
 {
-	# str.chr codigo_caractere
-	# Se o número de argumentos for maior que '1' sai da função
-	if [ ${#@} -gt 1 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	# Verifica se o argumento é um inteiro
-	elif [[ "$1" != ?(+|-)+([0-9]) ]]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$1' Deve ser um inteiro."
+	# str.asc caractere base 
+	# Max. Args: 2
+	# Opcional: 1
+	# Checa o número de argumentos passados na função.
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+
+	# Variavel local
+	local Code="$1"
+	local -i Base=${2:-$ASCII_DEC}	# Se "Base" for nulo, define o valor padrão.
+
+	# Verifica os argumentos
+	# Em 'Base' do tipo ASCII_HEX, verifica-se os caracteres são válidos.
+	if [[ ! "$Code" || "$Code" != ?(+)+([0-9-a-fA-Fx]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Código: Valor inserido inválido."
+	elif [ $Base -eq $ASCII_DEC ]; then
+		printf \\$(printf "x%02x" "$Code")
+	elif [ $Base -eq $ASCII_OCT ]; then
+		printf "\\$Code\r\n"
+	elif [ $Base -eq $ASCII_HEX ]; then
+		printf "\\$Code\r\n"
+	else
+		error_exit $BASH_LINENO $FUNCNAME "Base: Valor de base inválido."
 	fi
 	
-	# Imprime o caractere contido no indice 'code'
-	echo ${__ASCII[$1]}
-
 	# status
-	return 0
+	return 0	
 	
 }
 
 function str.format()
 {
 	# str.format expressão formato
-	# Variaveis locais
-	local __StrSwap __Vetor1 __Vetor2
+	# Nax. Args: 2
+	# Verifica o número de argumentos passados.
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+		
+	# Variavel local
+	local Expression="$1"
+	local Format="$2"
+	local StrSwap
+	local -i VExp VFmt
 
-	# Sai da função se o número de argumentos for superior a 2	
-	# Checa se os argumentos obrigatórios foram omitidos.
-	if [ ${#@} -gt 2 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não pode ser nula."
-	elif [ -z "$2" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Formato não pode ser nulo."
+	# Verifica os argumentos passados na função
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não pode ser nula."
+	elif [ ! "$Format" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Formato: não pode ser nulo."
 	fi
 				
 	# Lẽ o tamanho do indice de 'formato'
-	for __Vetor2 in $(seq 0 $((${#2}-1)))
+	for VFmt in $(seq 0 $((${#Format}-1)))
 	do
-		# Se o caractere da posição 'Vetor2' em $2 for igual "#" incrementa a variavel 'StrSwap' com o caractere da posição 'Vetor1' em '$1'
-		# substituindo o caractere "#" pelo pelo caractere na posição "Vetor1" em '$1"
-		# Incrementa o valor de 'Vetor1' para leitura do próximo caractere.
-		
-		# Se elemento na posição 'Vetor1' estiver vazio, incrementa "Vetor1"	
-		if [ "${1:$__Vetor1:1}" == " " ]; then
-			 ((__Vetor1++))
-		elif [ "${2:$__Vetor2:1}" == "#" ]; then
-			    __StrSwap+="${1:$__Vetor1:1}"
-				((__Vetor1++))
-				# Faz um salto no loop para o próximo elemento.
-				continue
+		# Lẽ o caractere na posição 'VExp' em 'Expression', se for igual a 'espaço' incrementa o valor de 'VExp'
+		# Lẽ o caractere na posição 'VFmt' em 'Format", se for igual ao caractere curinga "#", Incrementa a string
+		# "StrSwap" com o caractere da posição 'VExp' em Expression. Subsituindo o caractere curinga e incrementa o valor de 'VExp'
+		# passando para o próximo caracter em 'Format'
+		# Incrementa 'StrSwap' com o caractere da posição 'VFmt' em 'Format'
+		# Notas:
+		# 	Aplica-se a substituição somente nos caractere(s) coringa(s) "#" contidos em 'Format' pelos caracteres contidos em
+		#   'Expression'. Em ambos, o(s) 'espaço(s)' são ignorados.
+		if [ "${Expression:$VExp:1}" == " " ]; then
+			((VExp++))
+		elif [ "${Format:$VFmt:1}" == "#" ]; then
+			StrSwap+="${Expression:$VExp:1}"
+			((VExp++))
+			# Faz um salto no loop para o próximo elemento.
+			continue
 		fi
 
-		# Caractere diferente de "#" incrementa 'StrSwap' com elemento da posição 'Vetor2' em '$2'
-		__StrSwap+="${2:$__Vetor2:1}"
+		# Incrementa 'StrSwap'
+		StrSwap+="${Format:$VFmt:1}"
 	done 	
 
 	# Imprime	
-	echo $__StrSwap
+	echo $StrSwap
 
 	# status
 	return 0
@@ -284,51 +351,51 @@ function str.format()
 function str.instr()
 {
 	# str.instr caractere expressão metodo
+	# Max. Args: 3
+	# Opcional: 1
+	# Lẽ o número de argumentos passados.
+	[ ${#@} -gt 3 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:4}' Excesso de argumentos."
 	
-	# Inicia a variavel com valor -1.
-	# -1 refere-se a ocorrência não encontrada.
-	local __PosMatch=-1
-	local __clower __cupper __Vetor
-	# Default
-	local __CompareType=${3:-"text"}
-
-	# Sai da função se o número de argumentos for superior a 2	
-	# Checa se os argumentos obrigatórios foram omitidos.
-	if [ ${#@} -gt 3 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ ${#1} -gt 1 ]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$1' Deve ser um único caractere."
-	elif [ -z "$2" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não pode ser nula."
-	# Se método for 'text', converte o caractere passado na função para o oposto da sua formação
+	# Variavel local.
+	local Char="$1"
+	local Expression="$2"
+	local -i CompareType=${3:-$METHOD_COMPARE_BINARY}	# Se 'Comparetype' for nulo, define o valor padrão = 1
+	local -i Match=-1	# Valor padrão
+	local cLower cUpper VExp
+	
+	# Trata os argumentos da função.
+	if [ ! "$Char" -o  ${#Char} -gt 1 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Caractere: Deve ser um único caractere."
+	elif [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: não pode ser nula."
+	# Se método for '$METHOD_COMPARE_TEXT', converte o caractere passado na função para o oposto da sua formação
 	# [a-z] -> [A-Z] ou [A-Z] -> [a-z], alocando-o na variavel.
 	# Descrição:
 	# 		a -> aA ou A -> Aa
 	# Com essa conversão cria-se um filtro para ignorar a diferença de minúsculas para maiúsculas.
-	elif [ "$__CompareType" == "text" ]; then
-		__clower="$(echo $1 | tr '[:upper:]' '[:lower:]')"
-		__cupper="$(echo $1 | tr '[:lower:]' '[:upper:]')"
-	elif [ "$__CompareType" == "binary" ]; then
-		# Armazena somente o caractere passado na função.
-		__clower="$1"
-	else
-		error_exit $BASH_LINENO $FUNCNAME "'$__CompareType' Método de comparação inválido."
+	elif [ $CompareType -eq $METHOD_COMPARE_TEXT ]; then
+		cLower="$(echo "$Char" | tr '[:upper:]' '[:lower:]')" # Minúsculo
+		cUpper="$(echo "$Char" | tr '[:lower:]' '[:upper:]')" # Maiúsculo
+		Char="$cLower|$cUpper" # Armazena as formatações.
+	elif [ $CompareType -ne $METHOD_COMPARE_BINARY ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Comparação: Valor do método inválido."
 	fi
 	
-	# Lê o número de elementos contidos em '$2'
-	for __Vetor in $(seq 0 $((${#2}-1)))
+	# Lẽ os caracteres em 'Expression'.
+	for VExp in $(seq 0 $((${#Expression}-1)))
 	do
-		# Se o caractere na posição 'Vetor' em '$2' foi igual ao passado na função
-		# armazena o valor de 'Vetor' em 'PosMatch', substituindo o valor -1
-		# e sai do loop
-		if [[ "${2:$__Vetor:1}" == ?($__clower|$__cupper) ]]; then
-			__PosMatch=$__Vetor
+		# Se o caractere na posição 'VExp' em 'Expression' for igual 'Char'
+		# armazena a posição do caractere em 'Match' e sai do loop
+		if [[ "${Expression:$VExp:1}" == ?($Char) ]]; then
+			Match=$VExp
 			break
 		fi
 	done
 	
-	# Imprime a posição do elemento
-	echo $__PosMatch
+	# Imprime o valor armazenado em Match
+	# -1 : Não encontrado
+	# > -1: Posição encontrada.
+	echo $Match
 
 	# status
 	return 0
@@ -338,13 +405,14 @@ function str.instr()
 function str.tolower()
 {
 	# str.tolower expressão
-
-	# Verifica se o argumento foi passado para a função.
-	if [ ${#@} -gt 1 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
-	fi		
+	# Max. Args: 1
+	
+	# Lê o número de argumentos passados e trata 
+	if [ ${#@} -gt 1 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: não poder ser nula."
+	fi
 	
 	# Imprime a conversão 
 	echo "$1" | tr '[:upper:]' '[:lower:]'
@@ -357,14 +425,15 @@ function str.tolower()
 function str.toupper()
 {
 	# str.tolower expressão
-
-	# Verifica se o argumento foi passado para a função.
-	if [ ${#@} -gt 1 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
-	fi		
+	# Max. Args: 1
 	
+	# Lê número de argumentos e trata 
+	if [ ${#@} -gt 1 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: não poder ser nula."
+	fi
+
 	# Imprime a conversão 
 	echo "$1" | tr '[:lower:]' '[:upper:]'
 	
@@ -376,23 +445,22 @@ function str.toupper()
 function str.left()
 {
 	# str.left expressão comprimento
+	# Max. Args: 2
+	# Opcional: 1
+	# Lẽ o número de argumentos passados.
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
 
-	# Se o comprimento for omitido, define o valor padrão.
-	# Padrão: Comprimento total da expressão	
-	local __Length=${2:-${#1}}
+	# Variável local
+	local Expression="$1"
+	local -i Length=${2:-${#Expression}} # Se 'Length' for nula, define o valor padrão = comprimento taotal de 'Expression'
 	
-	# Verifica se o argumento foi passado para a função.
-	if [ ${#@} -gt 2 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
-	# Checa se o argumento é um inteiro
-	elif [[ "$__Length" != ?(+|-)+([0-9]) ]]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$2' Deve ser um inteiro."
+	# Trata o argumento.
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não poder ser nula."
 	fi
 
-	# Imprime
-	echo "${1:0:$__Length}"
+	# Imprime os primeiros 'Length' caracteres de 'Expression' 
+	echo "${Expression:0:$Length}"
 	
 	# status
 	return 0
@@ -400,27 +468,26 @@ function str.left()
 
 function str.right()
 {
-	# str.left expressão comprimento
+	# str.right expressão comprimento
+	# Max. Args: 2
+	# Opcional: 1
+	# Lẽ o número de argumentos
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
 
-	# Se o comprimento for omitido, define o valor padrão.
-	# Padrão: Comprimento total da expressão	
-	local __Length=${2:-${#1}}
+	# Variavel local
+	local Expression="$1"
+	local -i Length=${2:-${#Expression}} # Se 'Length' for nula, define o valor padrão = comprimento total de 'Expression'
 	
-	# Verifica se o argumento foi passado para a função.
-	if [ ${#@} -gt 2 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
-	# Checa se o argumento é um inteiro
-	elif [[ "$__Length" != ?(+|-)+([0-9]) ]]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$2' Deve ser um inteiro."
+	# Trata o argumento
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não poder ser nula."
 	fi
 	
 	# Adiciona o sinal '-' para leitura reversa da expressão	
-	__Length='-'$__Length
+	Length='-'$Length
 
-	# Imprime
-	echo "${1: $__Length}"
+	# Imprime os últimos 'Length' caracteres de 'Expression'
+	echo "${Expression: $Length}"
 	
 	# status
 	return 0
@@ -429,40 +496,39 @@ function str.right()
 function str.comp()
 {
 	# str.comp string1 string2 metodo
+	# Max. Args: 3
+	# Opcional: 1
+	# Lẽ o número de argumentos passados.
+	[ ${#@} -gt 3 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:4}' Excesso de argumentos."
 
 	# Variavel local
-	local __Str1 __Str2
-	# Default
-	local __CompareType=${3:-"text"}
+	local StringA="$1"
+	local StringB="$2"
+	local -i CompareType=${3:-$METHOD_COMPARE_BINARY} # Se 'CompareType' for nula, define valor padrão = 1
 
-	# Verifica o número de argumentos passados com a função. Se for maior que 3, sai da função.
-	# Checa se a strings são nulas
-	if [ ${#@} -gt 3 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" -o -z "$2" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "String não pode ser nula."
-	elif [ "$__CompareType" == "text" ]; then
-		# Método de comparação: 'text'
-		# Realiza duas conversões de formatação nas strings contindas em ambos argumentos '$1' e '$2'
+	# Trata os argumentos
+	if [ ! "$StringA" -o ! "$StringB" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "String: Não pode ser nula."
+	elif [ $CompareType -eq $METHOD_COMPARE_TEXT ]; then
+		# Método de comparação: $METHOD_COMPARE_TEXT
+		# Realiza duas conversões de formatação nas strings contindas em ambos argumentos 'StringA' e 'StringB'
 		# Fazendo com que ambas fiquem minúsculas e as diferenças entre formatações sejam eliminadas.
 		# Exemplo:
-		# 		__Str1="var"; __Str2="VAR"
+		# 		StringA="var"; StringB="VAR"
 		#
-		#       __Str1:  var -> VAR -> var 
-		#       __Str2:  VAR -> var -> var 
+		#       StringA:  var -> VAR -> var 
+		#       StringB:  VAR -> var -> var 
 		#
-		__Str1="$(echo "$1" | tr '[:lower:]' '[:upper:]' | tr '[:upper:]' '[:lower:]')" 
-		__Str2="$(echo "$2" | tr '[:lower:]' '[:upper:]' | tr '[:upper:]' '[:lower:]')"
-	elif [ "$__CompareType" == "binary" ]; then
-		# Armazena as strings sem alterações
-		__Str1="$1"
-		__Str2="$2"
-	else
-		error_exit $BASH_LINENO $FUNCNAME "'$__CompareType' Método de comparação inválido."
+		StringA="$(echo "$StringA" | tr '[:lower:]' '[:upper:]' | tr '[:upper:]' '[:lower:]')" 
+		StringB="$(echo "$StringB" | tr '[:lower:]' '[:upper:]' | tr '[:upper:]' '[:lower:]')"
+	elif [ $CompareType -ne $METHOD_COMPARE_BINARY ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Comparação: Valor do método inválido."
 	fi
 
-	# Imprime 'true' ou 'false'	
-	[[ "$__Str1" == "$__Str2" ]]  && echo true || echo false
+	# Imprime
+	# 0 - Iguais
+	# 1 - Diferentes
+	[[ "$StringA" == "$StringB" ]]  && echo 0 || echo 1
 	
 	# status
 	return 0	
@@ -470,29 +536,28 @@ function str.comp()
 
 function str.dup()
 {
-	# str.dup string numero
+	# str.dup string quantidade
+	# Max. Args: 2
+	# Opcional: 1
+	# Lẽ o número de argumentos
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
 	
 	# Variavel local
-	# Se '$2' for omitido, define valor padrão
-	# padrão: 1
-	local __Number=${2:-1}
-	local __Str __Cont
-	
-	# Verifica se o argumento foi passado para a função.
-	if [ ${#@} -gt 2 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
-	# Checa se o argumento é um inteiro
-	elif [[ "$__Number" != ?(+|-)+([0-9]) ]]; then
-		error_exit $BASH_LINENO $FUNCNAME "'$2' Deve ser um inteiro."
+	local -i Number=${2:-1} # Se 'Number' for nulo, define o valor padrão = 1
+	local String="$1"
+	local StrSwap
+	local -i Cont
+
+	# Trata o argumento.
+	if [ ! "$String" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não poder ser nula."
 	fi
 
-	# Incrementa '__Str' com a expressão '__Number' vezes
-	for ((__Cont=1; $__Cont <= $__Number; __Cont++)); do __Str+="$1"; done
+	# Incrementa 'StrSwap' com "String" 'Number' vezes. 
+	for ((Cont=1; $Cont <= $Number; Cont++)); do StrSwap+="$String"; done
 		
 	# Imprime
-	echo $__Str	
+	echo $StrSwap
 	
 	# status
 	return 0
@@ -501,21 +566,23 @@ function str.dup()
 function str.mod()
 {
 	# str.mod expressao inicio comprimento
+	# Max. Args: 3
+	# Opcional: 2
+	# Lẽ o número de argumentos.
+	[ ${#@} -gt 3 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:4}' Excesso de argumentos."
 
-	# Variaveis locais
-	# Padrão
-	local __start=${2:-0}
-	local __lenght=${3:-${#1}}
+	# Variavel local
+	local Expression="$1"
+	local -i Start=${2:-0}	# Se 'Start' for nula, define valor padrão = 0
+	local -i Length=${3:-${#Expression}}	# Se 'Length' for nula, define valor padrão = comprimento total de 'Expression'
 
-	# Checa os argumentos passados na função	
-	if [ ${#@} -gt 3 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não poder ser nula."
+	# Trata argumento
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não poder ser nula."
 	fi
 
-	# Imprime
-	echo "${1:$__start:$__lenght}"
+	# Imprime 'Expression' apartir da posição 'Start' e comprimento 'Length'
+	echo "${Expression:$Start:$Length}"
 
 	# status
 	return 0
@@ -524,63 +591,295 @@ function str.mod()
 
 function str.cat()
 {
-	# str.cat variavel expressão	
-	# Verifica os argumentos da função.	
-	if [ ${#@} -gt 2 -o ${#@} -eq 0 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Nome da variável não pode ser nula."
+	# str.cat variavel expressão
+	# Max. Args: 2
+	# Lẽ o número de argumentos.
+	[ ${#@} -gt 2 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+
+	# Variavel local
+	local Var="$1"
+	local Expression="$2"
+
+	# Trata argumentos.
+	if [ ! "$Var" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Variavel: Requer nome."
+	elif [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Nâo pode ser nula."
 	fi
 
 	# Concatena	
-	eval $1+="'$2'"
+	eval $Var+="'$Expression'"
 
 	# status
 	return 0
 	
 }
 
-function str.align()
+function str.ncat()
 {
-	# str.align expressao metodo comprimento
+	# str.cat variavel expressão comprimento
+	# Max. Args: 3
+	# Opcional: 1
+	# Lê o número de argumentos.
+	[ ${#@} -gt 3 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:4}' Excesso de argumentos."
 
-	# Padrão
-	# Se '__Column' estiver vazia, define o número de colunas atual do terminal
-	# Se '__Align' estiver vazai, define alinhamento a esquerda.
-	local __Column=${3:-$(tput cols)}
-    local __Align=${2:-"left"}
+	# Variavel local.
+	local Var="$1"
+	local Expression="$2"
+	local -i Length=${3:-${#Expression}}	# Se 'Length' for nula, define o valor padrão = comprimento total de 'Expression'
 
-	# Verifica o número de argumentos passados
-	if [ ${#@} -gt 3 ]; then
-		error_exit $BASH_LINENO $FUNCNAME
-		# Valor de comprimento deverá ser um inteiro positivo maior que '3'
-	elif [[ "$__Column" != ?(+)+([0-9]) || "$__Column" -lt 3 ]]; then
-			error_exit $BASH_LINENO $FUNCNAME "'$3' Comprimento deve ser um inteiro positivo e maior que 2."
-	elif [ -z "$1" ]; then
-		error_exit $BASH_LINENO $FUNCNAME "Expressão não pode ser nula."
-	elif [ "$__Align" == left ]; then
-		# Alinhamento: A Esquerda (Padrão)
-		# Apaga todos os espaços e tabulações no inicio da linha
-		echo "$1" |	sed 's/\(^ \{2,\}\|\t\)//g'
-	elif [ "$__Align" == right ]; then
-		# Alinhamento: A Direita
-		# Limpa a formatação da 'expressão' removendo todos os 'espaços multiplos consecutivos' e 'tabulações' do inicio e fim da linha
-		# Insere espaços no inicio da 'expressão' até o número de substituições seja igual a '__Column'
-		echo "$1" | sed 's/\(^ \{2,\}\|\t\)//g;s/\( \{2,\}\|\t\)$//g' | sed -e :a -e "s/^.\{1,$(($__Column - 1))\}$/ &/;ta"
-	elif [ "$__Align" == center ]; then
-		# Alinhamento: Centralizado
-		# Limpa a formatação da 'expressão' substituindo todos os 
-		# 'multiplos espaços consecutivos' e 'tabulações' do inicio da linha por um 'único espaço'
-		# Insere 'espaços' no inicio e fim da 'expressão' até que o número de substituições seja igual a '__Column'
-		echo "$1" | sed 's/\( \{2,\}\|\t\)/ /g' | sed -e :a -e "s/^.\{1,$(($__Column - 2))\}$/ & /;ta"
-	else
-		error_exit $BASH_LINENO $FUNCNAME "'$2' Método de alinhamento inválido."
+	# Trata argumentos.
+	if [ ! "$Var" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Variavel: Requer nome."
+	elif [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Nâo pode ser nula."
 	fi
+	
+	# Incrementa 'Var' com os primeiros 'Length' caracteres de 'Expression'
+	eval $Var+="'${Expression:0:$Length}'" 
 
 	# status
 	return 0
-
+	
 }
 
-# Exporta as funções 
-export -f ${__STR_LIST__[*]}
+function str.isdigit()
+{
+	# str.isdigit expressão
+	# Max. Args: 1
+	# Lẽ o número de argumentos.
+	[ ${#@} -gt 1 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+
+	# Variavel local
+	local Expression="$1"
+	local -i RetVal
+
+	# Trata o argumento	
+	if [ ! "$Expression" ]; then
+		RetVal=-1
+	# Se 'Expression' for nula após remover todos os digitos,
+	# significa que o conteúdo de 'Expression' é somente digito.
+	elif [ ! "$(echo "$Expression" | tr -d '[:digit:]')" ]; then 
+		RetVal=0
+	else
+		RetVal=1
+	fi 
+	
+	# Imprime o valor de 'RetVal'
+	# -1 - Nula
+	#  0 - É digito
+	#  1 - Não é digito
+	echo $RetVal
+	
+	return 0
+	
+}
+
+function str.isalpha()
+{
+	# str.isalpha expressão
+	# Max. Args: 1
+	# Lẽ o número de argumentos
+	[ ${#@} -gt 1 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+
+	# Variavel local
+	local Expression="$1"
+	local -i RetVal
+	
+	if [ ! "$Expression" ]; then
+		RetVal=-1
+	# Se 'Expression' for nula após remover todos os caracteres a-zA-Z,
+	# significa que o conteúdo de 'Expression' é Alpha.
+	elif [ ! "$(echo "$Expression" | tr -d '[:alpha:]')" ]; then
+		RetVal=0
+	else
+		RetVal=1
+	fi 
+	
+	# Imrime o valor de 'RetVal'
+	# -1 - Nula
+	#  0 - É Alpha
+	#  1 - Nâo é Alpha
+	echo $RetVal
+	
+	return 0
+	
+}
+
+function str.islower()
+{
+	# str.islower expressão
+	# Max. Args: 1
+	# Lẽ o número de argumentos
+	[ ${#@} -gt 1 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+
+	# Variável local
+	local Expression="$1"
+	local -i RetVal
+	
+	# Trata argumento
+	if [ ! "$Expression" ]; then
+		RetVal=-1
+	# Se 'Expression' for nula após remover todos os caracteres minúsculos,
+	# significa que o conteúdo de 'Expression' é minúsculo.
+	elif [ ! "$(echo "$Expression" | tr -d '[:lower:]')" ]; then
+		RetVal=0
+	else
+		RetVal=1
+	fi 
+	
+	# Imrime o valor de 'RetVal'
+	# -1 - Nula
+	#  0 - É Minúsculo
+	#  1 - Nâo é Minúsculo
+	echo $RetVal
+	
+	return 0
+	
+}
+
+function str.isupper()
+{
+	# str.isupper expressão
+	# Max. Args: 1
+	# Lẽ o número de argumentos
+	[ ${#@} -gt 1 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+
+	# Variável local
+	local Expression="$1"
+	local -i RetVal
+	
+	if [ ! "$Expression" ]; then
+		RetVal=-1
+	# Se 'Expression' for nula após remover todos os caracteres Maiúsculos,
+	# significa que o conteúdo de 'Expression' é maiúculo.
+	elif [ ! "$(echo "$Expression" | tr -d '[:upper:]')" ]; then
+		RetVal=0
+	else
+		RetVal=1
+	fi 
+	
+	# Imrime o valor de 'RetVal'
+	# -1 - Nula
+	#  0 - É Maiúsculo
+	#  1 - Nâo é Maiúsculo
+	echo $RetVal
+	
+	return 0
+	
+}
+
+function str.isalnum()
+{
+	# str.isalnum expressão
+	# Max. Args: 1
+	# Lẽ o número de argumentos.
+	[ ${#@} -gt 1 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:2}' Excesso de argumentos."
+	
+	# Variavel local
+	local Expression="$1"
+	local -i RetVal
+	
+	# Trata argumento.
+	if [ ! "$Expression" ]; then
+		RetVal=-1
+	# Se 'Expression' for nula após remover todos os caracteres e digitos,
+	# significa que o conteúdo de 'Expression' é Alpha numérico.
+	elif [ ! "$(echo "$Expression" | tr -d '[:alnum:]')" ]; then
+		RetVal=0
+	else
+		RetVal=1
+	fi 
+	
+	# Imrime o valor de 'RetVal'
+	# -1 - Nula
+	#  0 - É Alpha numérico
+	#  1 - Nâo é Alpha numérico
+	echo $RetVal
+	
+	return 0
+	
+}
+
+function str.filter()
+{
+	# str.filter expressão caracteres filtro
+	# Max. Args: 10
+	# Opcional: 2
+	[ ${#@} -gt 10 ] && error_exit $BASH_LINENO $FUNCNAME "'${*:11}' Excesso de argumentos."
+
+	# Variavel local	
+	local Expression="$1"
+	local Char="$2"
+	local -ia Filter=(${*:3})
+
+	# Se filter for nulo, define o valor padrão = 9
+	Filter=${Filter:-$FLT_PRINT}
+
+	# Trata argumento
+	if [ ! "$Expression" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Expressão: Não pode ser nula."
+	fi 
+	
+	# Lẽ os filtros	
+	for FTL in ${Filter[*]}
+	do
+		# Se valor de 'FTL' estiver na seleção
+		# incrementa 'eFilter' com a expressão correspondente.
+		case $FTL in						# Lẽ o valor
+			$FLT_ALNUM)						#	1
+				eFilter+="[[:alnum:]]{1,}|" 
+				;;
+			$FLT_ALPHA)						#	2
+				eFilter+="[[:alpha:]]{1,}|" 
+				;;
+			$FLT_CNTRL)						#	3
+				eFilter+="[[:cntrl:]]{1,}|"
+				;;
+			$FLT_DIGIT)						# 	4
+				eFilter+="[[:digit:]]{1,}|"
+				;;
+			$FLT_GRAPH)						#	5
+				eFilter+="[[:graph:]]{1,}|"
+				;;
+			$FLT_LOWER)						#	6
+				eFilter+="[[:lower:]]{1,}|"
+				;;
+			$FLT_PUNCT)						#	7
+				eFilter+="[[:punct:]]{1,}|"
+				;;
+			$FLT_UPPER)						#	8
+				eFilter+="[[:upper:]]{1,}|"
+				;;
+			$FLT_PRINT)						#	9
+				eFilter+="[[:print:]]{1,}|"
+				;;	
+			*)
+				# Nehum dos valores acima.
+				error_exit $BASH_LINENO $FUNCNAME "Filtro: Valor inválido."
+				return 0
+				;;
+		esac
+	done
+	
+	# Se 'Char' não for nulo, incrementa 'eFilter' com o valor de 'Char'
+	[ $Char ] && eFilter+="[$Char]{1,}"
+
+	# Desabilita a cor de seleção do grep
+	GREP_COLOR=never
+
+	# Filtra 'Expression' com a expressão em 'eFilter' e imprime 
+	echo "$Expression" | egrep --no-messages --only-matching "$eFilter" | tr '\n' ' ' | sed 's/$/\n/'
+
+	# Reset
+	unset GREP_COLOR
+
+	# Status
+	return 0
+	
+}
+
+# Registra funções e intruções somente leitura
+declare -rxf ${__STR_LIST__[*]}
+declare -rxf ${__STR_CMD__[*]}
+

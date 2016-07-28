@@ -1,0 +1,36 @@
+#!/bin/bash
+
+
+exec 2>/dev/null
+
+# Informação de depuração
+declare -A tag_line[pt_BR]="Linha"
+declare -n lnum=BASH_LINENO
+declare -n fname=FUNCNAME
+
+_LANG=pt_BR
+
+# debug
+
+# Mensagens de erro
+declare -A err_int_positive[pt_BR]="%s: '%s' Requer um inteiro positivo."
+declare -A err_many_args[pt_BR]="%s: '%s' Excesso de argumentos."
+declare -A err_arg_null[pt_BR]="%s: Não pode ser nulo."
+declare -A err_unknown[pt_BR]="Erro desconhecido."
+declare -A err_sintax[pt_BR]="'%s': Sintaxe erro."
+
+# parametros
+declare -A p_textcolor[pt_BR]="Cor do texto"
+declare -A p_func[pt_BR]="@"
+
+function error_exit()
+{
+	declare -n err_msg=${3:-err_unknown}
+	declare -n err_param=${4:-p_func}
+
+	printf "$__SCRIPT__: ${tag_line[$_LANG]} $1: $2: ${err_msg[$_LANG]}\n" "${err_param[$_LANG]}" "$5" 2>&1 
+	
+	exit 1
+}
+
+trap 'printf "$__SCRIPT__: Linha $LINENO: ${err_sintax[$_LANG]}\n" "$BASH_COMMAND"' ERR
