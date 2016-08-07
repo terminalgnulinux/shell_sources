@@ -1,0 +1,807 @@
+#!/bin/bash
+
+# -----------------------------------------------------------------------------
+#   Biblioteca: str (string)
+#   Criado por: Juliano Santos
+#   Data: 10 de Julho de 2016
+#   Email: juliano.santos.bm@gmail.com
+#  
+#   A biblioteca contém funções para manipulação de strings e expressões,
+#   no intuito de agilizar a automatizar o tratamento de cadeias de 
+#   caracteres para diversas situações.
+#   Seguindo um conceito de nomenclatura biblioteca.<função> para organização;
+#   deixando o código legível e de fácil compreensão
+#
+#   Funções:
+#
+#   str.len, str.rev, str.split, str.replace, str.asc, str.chr, str.format
+#   str.instr, str.tolower, str.toupper, str.left, str.right, str.comp,
+#   str.dup, str.mod, str.cat, str.ncat, str.isdigit, str.isalpha, str.isupper
+#   str.islower, str.isalnum , str.ispunct, str.filter
+#
+#   DOC:
+#
+#   A documentação da biblioteca está contida no arquivo 'str.hlp' no
+#   diretório 'src'.
+# ------------------------------------------------------------------------------
+
+# Bibliotecas externas
+source me
+source err
+
+# Se a biblioteca já foi carregada.
+if str.__INIT__ 2>/dev/null; then
+	return $?; fi
+
+# Biblioteca
+declare -r __STR_LIB='str'
+
+# Inicialização de instruções reservadas.
+function str.__INIT__() { return 0; }
+function str.__NAME__() { printf "%s\n" "$__STR_LIB"; }
+function str.__LIST__() { printf "%s\n" "${__STR_LIST[*]}" | sed 's/ /, /g'; }
+function str.__CONST__(){ printf "%s\n" "${__STR_CONST[*]}" | sed 's/ /, /g'; }
+
+# Os elementos contidos em '__STR_LIST' são somente leitura,
+# intrínseco a execução e importação da biblioteca.
+declare -ar __STR_LIST=(
+str.len
+str.reverse
+str.split
+str.replace
+str.asc
+str.chr
+str.format
+str.instr
+str.tolower
+str.toupper
+str.left
+str.right
+str.comp
+str.dup
+str.mod
+str.isdigit
+str.isalpha
+str.islower
+str.isupper
+str.isalnum
+str.isblank
+str.ispunct
+str.filter
+)
+
+# Array contendo as contantes das bibliotecas.
+declare -ar __STR_CONST=(
+# Tipo de comparação de strings.
+# Passando como argumentos nas funções, irá definir como a comparação entre string será tratada.
+# Tipos: COMP_BIN e COMP_TXT
+# Notas
+#       TXT:  	A diferença entre maíusculas e minúsculas seram ignoradas.
+#               Será feita um conversão entre as strings para a mesma formatação,
+#               tornando-as iguais.
+#       BIN: 	Haverá diferença entre caracteres maiúsculos e minúsculos.
+#               Argumentos não seram convertidos e suas formatações mantidas.
+COMP_BIN=1
+COMP_TXT=2
+
+# Base de notação da tabela ASCII
+# Tipos de notação:
+# ASCII_DEC		- Notação decimal
+# ASCII_OCT		- Notação octal
+# ASCII_HEX		- Notação Hexadecimal
+ASCII_DEC=1
+ASCII_OCT=2
+ASCII_HEX=3
+
+# Mapeamentos de caracteres 
+CH_ALNUM=11
+CH_ALPHA=12
+CH_BLANK=13
+CH_CNTRL=14
+CH_DIGIT=15
+CH_GRAPH=16
+CH_LOWER=17
+CH_PRINT=18
+CH_PUNCT=19
+CH_SPACE=20
+CH_UPPER=21
+CH_XDIGIT=22
+)
+
+# Declara as constantes 
+eval declare -ir "${__STR_CONST[@]}"
+
+# Define o status da classe
+# 1 - Não inicializada
+# 0 - Inicializada
+declare -i __STR_CLASS_INIT=1
+
+# Class str
+function str()
+{
+	# Variavel local
+	local __ClassName
+	local __Method
+	# Verifica se há conflitos com nomes de classe reservadas.
+	# Os métodos são registrados seguindos do prefixo da classe.
+	# Exemplo: str.len
+	#           |   |____ Método
+	#			|________ Classe
+	#
+	# Verifica possivel conflito, comparando com str.__NAME__
+	for __ClassName in $@; do
+		if [ "$__ClassName" == $(str.__NAME__) ]; then
+			error_exit __P_CLASS "$__ClassName" __ERR_CLASS_NAME_INVALID; fi; done
+
+	# Inicia os métodos da classe 'str'
+	if [ $__STR_CLASS_INIT -eq 1 ]
+	then
+		function str.__init__()
+		{
+			# Verifica se há argumentos
+			[ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+	
+			# Lê o nome das classes passadas
+			for __ClassName in $@; do
+				# Lẽ os métodos registrados contidos no array '__STR_LIST'
+				# Retira o prefixo (Nome da classe), obtendo apenas o nome do método.
+				# Monta a estrutura e executa com eval, criando assim a nova classe seguindo do sufixo método.
+				# __ClassName.__Method
+				for __Method in ${__STR_LIST[@]#*.}; do
+					# Limpa o método se existir e registra o novo
+					# Se for somente leitura, imprime mensagem de erro e sai da função.	
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+						error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+					eval "function $__ClassName.$__Method(){ $__STR_CLASS_NAME.$__Method \"\$@\"; }" # Definindo
+				done
+				# Instruções reservadas da nova classe.
+				eval "function $__ClassName.del() { $__STR_CLASS_NAME.__del__ $__ClassName; }"
+				eval "function $__ClassName.type() { $__STR_CLASS_NAME.__type__; }"
+			done
+				
+			return 0
+		}
+	
+		function str.__del__()
+		{
+			# Verifica se o nome da classe foi passado.	
+			[ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+			
+			# Lẽ as classes passadas em 'str'
+			for __ClassName in $@; do
+				# Verifica se o tipo da classe é compativel.
+				# Nota: Class: @classe
+			if [ "$($__ClassName.type 2>/dev/null)" != "$__STR_CLASS_TYPE" ]; then
+					error_exit __P_CLASS "$__ClassName" __ERR_CLASS_TYPE_INCOMPATIBLE; fi
+				# Limpa todos os métodos da classe
+				for __Method in ${__STR_LIST[@]#*.}; do
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+						error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+				done
+				if ! unset -f $__ClassName.del $__ClassName.type 2>/dev/null; then
+					error_exit __P_CLASS "$__ClassName" __ERR_CLASS_METHOD_READONLY; fi
+			done
+				
+			# Finaliza
+			return 0				
+		}
+		
+		function str.__type__()
+		{
+			# Imprime  
+			printf "%s\n" "$__STR_CLASS_TYPE"
+			return 0;
+		}
+	
+		function str.len()
+		{
+			# str.len expressão
+			# Max args: 1
+			
+			# Imprime o comprimento da expressão.
+			printf "%s\n" "${#1}"; return 0;
+		}
+
+		function str.reverse()
+		{
+			# str.rev expressão
+			# Max args: 1
+			local __line __vet
+			
+			# Cria um descritor de arquivo com a expressão. Lê uma linha por vez, obtem seu comprimento 
+			# Imprime os caracteres na ordem reversa (final > inicio) da linha.
+			while read __line; do
+				for __vet in $(seq $((${#__line}-1)) -1 0) ; do
+					echo -n "${__line:$__vet:1}"; done
+				echo 			
+			done < <(echo "$1") # Alimenta o loop com o descritor
+		
+			# retorno
+			return 0
+		
+		}
+
+		function str.split()
+		{
+			# str.split expressão delimitador variavel comparacao
+			# Max. Args: 4
+			# Opcional: 1 (Comparação)
+			local -i __comp=${3:-$COMP_BIN} # Comparação binária (padrão)
+
+			# Checa o número de argumentos passados.
+			if [ "${#@}" -gt 3 ]; then
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then	# Expressão
+				error_exit __P_EXPRESSION "" __ERR_EXP_NULL
+			elif [ ! "$2" ]; then   # Delmitador
+				error_exit __P_DELIMITER "" __ERR_PARAM_NULL
+			elif [ $__comp -eq $COMP_BIN ]; then    # Comparação binária
+				echo "$1" | sed "s/$2/\" \"/g;s/\(^\|$\)/\"/g"
+			elif [ $__comp -eq $COMP_TXT ]; then	# Comparação textual
+				echo "$1" |  sed "s/$2/\" \"/Ig;s/\(^\|$\)/\"/g"
+			else
+				echo "$1" # Imprime expressão sem alterações quando o método de comparação é inválido.
+			fi
+			# retorno
+			return 0
+			
+		}
+
+		function str.replace()
+		{
+			# str.replace expressão procurada substituição mêtodo
+			# Max param: 4
+			# Opcional: 2 (substituição, método)
+			local -i __comp=${4:-$COMP_BIN} # (Padrão)
+			
+			# Verifica o número de parametros passados.
+			if [ ${#@} -gt 4 ]; then
+				error_exit __P_PARAM "${*:5}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then 								 # Expressão
+				error_exit __P_EXPRESSION "" __ERR_EXP_NULL
+			elif [ ! "$2" ]; then  								 # Busca
+				error_exit __P_SEARCH "" __ERR_PARAM_NULL
+			elif [ $__comp -eq $COMP_BIN ]; then						 # Comparação binária
+				sed "s/$2/$3/g" < <(echo "$1")
+			elif [ $__comp -eq $COMP_TXT ]; then 						 # Comparação textual
+				sed "s/$2/$3/Ig" < <(echo "$1")
+			else
+				echo "$1"
+			fi
+			
+			# Retorno
+			return 0
+		}
+		
+		function str.asc()
+		{
+			# str.asc caractere base
+			# Max. param: 2
+			# Opcional: 1 (base)
+			
+			local -i __base=${2:-$ASCII_DEC} # Base decimal (padrão)
+
+			# Verifica o número de argumentos passados.
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" -o "${#1}" -gt 1 ]; then
+				error_exit __P_CHAR "$1" __ERR_CHAR_ONLY
+		    elif [ $__base -eq $ASCII_DEC ]; then	# Base decimal
+				# Imprime o valor decimal do caractere.
+		    	printf "%d\n" "'$1" 	
+			elif [ $__base -eq $ASCII_OCT ]; then	# Base Octal
+				# Converte caractere para sua base octal e insere o prefixo '0'
+		    	printf "0%o\n" "'$1"	
+			elif [ $__base -eq $ASCII_HEX ]; then	# Base Hexadecimal
+				# Covnerte  caractere para sua base hexadecimal e insere o prefixo 'x'
+				printf "x%x\n" "'$1"
+			fi
+			
+			# retorno
+			return 0	
+			
+		}
+		
+		function str.chr()
+		{
+			# str.chr base
+			# Max. param: 1
+			
+			local -i __base=${2:-$ASCII_DEC} # Base decimal (padrão)
+				
+			# Verifica o número de argumentos passados.
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then 											     	    # Base não pode ser nula
+				error_exit __P_BASE "" __ERR_PARAM_NULL
+			# Expressão regular que testa a base passada na função.
+			elif [[ "$1" =~ ^0+[0-9]{3}$ ]] || [[ "$1" =~ ^x+[0-9a-f]{2}$ ]]; then		# Testa o tipo da base (octal ou hexadecimal)
+				# Imprime o caractere base
+				echo -e "\\$1"
+			elif [[ "$1" =~ ^[0-9]{,3}$ ]]; then										# Tipo decimal
+				# Para base decimal, converte código para um único caractere.
+				echo "$1" | awk '{printf("%c\n",$1)}'
+			fi
+	
+			# retorno
+			return 0	
+		}
+
+		function str.format()
+		{
+			# str.format expressão formato
+			# Max. param: 2
+			local __swap
+			local -i __exp __fmt
+			
+			# Verifica o número de argumentos passados.
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM  # Num. Param
+			elif [ ! "$1" ]; then
+				error_exit __P_EXPRESSION "" __ERR_PARAM_NULL 	# Expressão
+			elif [ ! "$2" ]; then
+				error_exit __P_FORMAT "" __ERR_PARAM_NULL		# Formato
+			fi
+			
+			# Lẽ os caracteres em 'formato'	
+			for __fmt in $(seq 0 $((${#2}-1)))
+		    do
+				# Se o caractere na posição '__exp' em expresssão for um espaço, incrementa '__exp'
+				# indo para o próximo caractere da 'expressão'
+				if [ "${1:$__exp:1}" == " " ]; then
+            		((__exp++))		# Incrementa
+				# Se o caractere em 'formato' for coringa "#"
+				elif [ "${2:$__fmt:1}" == "#" ]; then
+					# Incrementa '__swap' com o caractere da posição '__fmt' em 'expressão'
+					# Sobe o indice do vetor da 'expressão', pulando para o próximo caractere.
+            		__swap+="${1:$__exp:1}"
+					((__exp++))
+					# Pula para o próximo vetor do 'formato'
+					continue
+				fi
+				__swap+=${2:$__fmt:1}
+			done
+			
+			# Imprime
+			echo $__swap
+			
+			# retorno
+			return 0
+			
+		}
+		
+		function str.instr()
+		{
+			#str.instr caractere expressão metodo
+			# Max. param: 3
+			# Opcional: 1
+			local -i __comp=${3:-$COMP_BIN}
+			local __char="$1"
+			local -i __match=-1
+			local -i __exp
+
+			if [ ${#@} -gt 3 ]; then							# Num. Param
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM  
+			elif [ ! "$1" -o ${#1} -gt 1 ]; then				# Caractere
+				error_exit __P_CHAR "$1" __ERR_CHAR_ONLY
+			elif [ ! "$2" ]; then								# Expressão
+				error_exit __P_EXPRESSION "" __ERR_PARAM_NULL
+			elif [ $__comp -eq $COMP_TXT ]; then				# Método de comparação
+				# Converte caractere para 'maiusculo' e 'minusculo' e armazena em '__char',
+				__char="$(echo $__char | awk '{print toupper($1)"|"tolower($1)}')"
+			fi
+			
+			# Lẽ os indices da 'expressão'	
+			for __exp in $(seq 0 $((${#2}-1))); do
+				# Se o caractere da posição '__exp' em 'expressão' for igual '__char',
+				# armazena em '__match' o valor de '__exp' e sai do loop. Caso contrário
+				# imprime o valor default '-1'
+				if [[ "${2:$__exp:1}" == ?($__char) ]]; then
+					__match=$__exp; break; fi; done
+			
+			# imprime
+			echo $__match
+			
+			# retorno
+			return 0
+		}
+
+		function str.tolower()
+		{
+			# str.tolower expressão
+			# Max. param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM 
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+			
+			# Converte de minusculo para maisuculo a 'expressão' e imprime
+			echo "$1" | tr '[:upper:]' '[:lower:]'
+			
+			# retorno
+			return 0
+		}
+		
+		function str.toupper()
+		{
+			# str.toupper expressão
+			# Max. param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM 
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+			
+			# Converte de minusculo para maisuculo a 'expressão' e imprime
+			echo "$1" | tr '[:lower:]' '[:upper:]'
+			
+			# retorno
+			return 0
+		}
+
+		function str.left()
+		{
+			# str.left expressão comprimento
+			# Max. param: 2
+			# Opcional 1 (comprimento)
+			# Lê o número de argumentos
+			if [ ${#@} -gt 2 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM 
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			elif [[ "$2" != ?(+)+([0-9]) ]]; then					# Comprimento
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+				
+			# Se 'comprimento' for omitido, imprime o comprimento total da expressão
+			echo "${1:0:${2:-${#1}}}"
+			
+			return 0
+		}	
+		
+		function str.right()
+		{
+			# str.right expressão comprimento
+			# Max. param: 2
+			# Opcional 1 (comprimento)
+
+			# Acrescenta operador aritimético '-' no comprimento da expressão
+			local -i __len=-${2:-${#1}}	
+			
+			# Lê o número de parametros.
+			if [ ${#@} -gt 2 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM 
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then					# Comprimento
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+				
+			# Se 'comprimento' for omitido, imprime o comprimento total da expressão
+			echo "${1: $__len}"
+
+			# retorno
+			return 0
+		}
+
+		function str.comp()
+		{
+			# str.comp expressão1 expressão2 método
+			# Max. param: 3
+			# Opcional: 1 (método)
+			local -i __comp=${3:-$COMP_BIN}		# Padrão (Comparação binária)
+			local __exp1="$1" __exp2="$2"
+	
+			# Lẽ o número de parametros.
+			if [ ${#@} -gt 3 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM 
+			elif [ ! "$1" ]; then									# Expressão1
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then									# Expressão2
+				error_exit __P_EXPRESSION "$2" __ERR_PARAM_NULL
+			elif [ $__comp -eq $COMP_TXT ]; then					# Método de comparação textual
+				# Converte ambas expressões para maiusculas.
+				# Criando efeito no sensitive case.
+				__exp1="$(str.toupper "$__exp1")"
+				__exp2="$(str.toupper "$__exp2")"
+			fi
+			
+			# Testa se ambas são iguais.
+			# 0 - iguais
+			# 1 - diferentes
+			[ "$__exp1" == "$__exp2" ] && echo 0 || echo 1
+		
+			# retorno	
+			return 0
+			
+		}
+
+		function str.dup()
+		{
+			# str.dup expressão quantidade
+			# Max. Param: 2
+			# Opcional: 1
+			if [ ${#@} -gt 2 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then			# Quantidade
+				error_exit __P_COUNT "$2" __ERR_INT_POSITIVE
+			fi
+			
+			# Imprime "$1" __count.Vezes
+			# Se quantidade for omitido, define o valor padrão '1'
+			for ((__count=1;__count<=${2:-1};__count++)); do
+				printf "%s" "$1"; done
+			
+			# CRLF
+			echo	
+			
+			# retorno
+			return 0		
+		}
+		
+		function str.mod()
+		{
+			# str.mod expressão inicio comprimento
+			# Max. Param: 3
+			# Opcional: 2
+			local -i __start=${2:-0}
+			local -i __length=${3:-${#1}}	
+
+			# Lê o número de parametros.
+			if [ ${#@} -gt 3 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then			# Inicio
+				error_exit __P_START "$2" __ERR_INT_POSITIVE
+			elif [[ "$3" && "$3" != ?(+)+([0-9]) ]]; then			# Comprimento
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+		
+			# Imprime a cadeia de caracteres na posição '__start' e comprimento '__length'
+			echo "${1:$__start:$__length}"	
+
+			# retorno
+			return 0
+		}
+		
+		function str.isdigit()
+		{
+			# str.isdigit expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os digitos da 'expressão' e verifica 
+			# nulo = é digito
+			# não for nulo = não é digito.
+			[ ! "$(echo "$1" | tr -d '[:digit:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.isalpha()
+		{
+			# str.isalpha expressão
+			# Max. Param: 1
+
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres alfa da 'expressão' e verifica 
+			# nulo = é alfa
+			# não for nulo = não é alfa
+			[ ! "$(echo "$1" | tr -d '[:alpha:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.islower()
+		{
+			# str.islower expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres minúsculos da 'expressão' e verifica 
+			# for nulo = é minúsculo
+			# não for nulo = não é minúsculo
+			[ ! "$(echo "$1" | tr -d '[:lower:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.isupper()
+		{
+			# str.isupper expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres maiúsculos da 'expressão' e verifica 
+			# for nulo = é maiúsculo
+			# não for nulo = não é maiúsculo
+			[ ! "$(echo "$1" | tr -d '[:upper:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+	
+		function str.isalnum()
+		{
+			# str.isalnum expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres alfanuméricos da 'expressão' e verifica 
+			# for nulo = é alfanumérico
+			# não for nulo = não é alfanumérico
+			[ ! "$(echo "$1" | tr -d '[:alnum:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.isblank()
+		{
+			# str.isblank expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres alfanuméricos da 'expressão' e verifica 
+			# for nulo = é espaço
+			# não for nulo = naõ é espaço
+			[ ! "$(echo "$1" | tr -d '[:blank:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.ispunct()
+		{
+			# str.ispunct expressão
+			# Max. Param: 1
+			if [ ${#@} -gt 1 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+		
+			# Remove os caracteres de pontuação da 'expressão' e verifica 
+			# for nulo = é pontuação
+			# não for nulo = naõ é pontuação
+			[ ! "$(echo "$1" | tr -d '[:punct:]')" ] && echo 0 || echo 1
+			
+			# retorno
+			return 0
+		}
+		
+		function str.filter()
+		{
+			# str.filter expressão word filtro
+			# Max. Param: 14
+			# Opcional: 2
+			
+			local __word="$2"
+
+			if [ ${#@} -gt 14 ]; then								# Num. Param.
+				error_exit __P_PARAM "${*:15}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then									# Expressão
+				error_exit __P_EXPRESSION "$1" __ERR_PARAM_NULL
+			fi
+			
+			# Lẽ os filtros e incrementa '__efilter' com os parametros
+			# passados na função.
+			for __filter in ${@:3}
+			do
+				case $__filter in
+					$CH_ALNUM)
+						__efilter+="[[:alnum:]]{1,}|"		#Alfanumérico
+						;;
+					$CH_ALPHA)
+						__efilter+="[[:alpha:]]{1,}|"		# Alfa
+						;;
+					$CH_BLANK)
+						__efilter+="[[:blank:]]{1,}|"		# Spaço
+						;;
+					$CH_CNTRL)                     
+        		        __efilter+="[[:cntrl:]]{1,}|"		# Teclas de controle
+                		;;
+		            $CH_DIGIT)                    
+        		        __efilter+="[[:digit:]]{1,}|"		# Número
+                		;;
+		            $CH_GRAPH)                   
+						__efilter+="[[:graph:]]{1,}|"		# Caracteres gráficos
+              			  ;;
+          			$CH_LOWER)                  
+               			__efilter+="[[:lower:]]|{1,}"		# Minúsculo
+		                ;;
+          			$CH_PRINT)                 
+               			__efilter+="[[:print:]]{1,}|"		# Imprimiveis
+		                ;;
+        		    $CH_PUNCT)                
+		                __efilter+="[[:punct:]]{1,}|"		# Pontuação
+        		        ;;
+        		    $CH_SPACE)               
+		                __efilter+="[[:space:]]{1,}|"		# Espaços verticais e horizontais
+        		        ;;
+		            $CH_UPPER)
+        		        __efilter+="[[:upper:]]{1,}|"		# Maiúsculo
+		                ;;
+					$CH_XDIGIT)                   
+            		    __efilter+="[[:xdigit:]]{1,}|"		# Hexadecimal
+						;;
+				esac
+			done
+		
+			# Se argumento 'word' exitir, incrementa no final de '__efilter'
+			[ $__word ] && __efilter+="$__word"
+			
+			# Atribui 'never' a variável de ambiente do grep, desabilitando cores em ocorrências encontradas.
+			GREP_COLOR=never
+
+			# Aplica filtro
+			echo "$1" | egrep --no-messages --only-matching "$__efilter" | tr '\n' ' ' | sed 's/$/\n/'
+			
+			# Limpa variável.
+			unset GREP_COLOR
+	
+			# Retorno
+			return 0
+		}
+
+		
+		############  Propriedades da classe  #################
+		# Variáveis
+		readonly __STR_CLASS_INIT=0
+		readonly __STR_CLASS_NAME='str'
+		readonly __STR_CLASS_TYPE="Class: @$__STR_CLASS_NAME"
+		
+		# Métodos
+		readonly -f "${__STR_LIST[@]}"
+		
+		# Instruções reservadas.
+		readonly -f str.__init__ str.__del__ str.__type__
+
+		return 0
+	fi
+	
+	# Inicializa um nova classe com nome passado em 'str' e retorna 0
+	# Passando os nomes das classes para 'str.__init__' que irá registrar os métodos da nova classe. 
+	str.__init__ $@
+	
+	return 0
+}
+	
+# Inicializa a classe
+str
+
+
+
+

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Finaliza execução se ocorrer um erro
+#set -e
+
+# Se biblioteca já foi carregada.
+if err.__INIT__ 2>/dev/null; then
+	return $?; fi
+
+# Inicia as intruções reservadas.
+function err.__INIT__(){ return 0; }
+function err.__NAME__(){ printf "%s\n" "$__ERR_LIB"; return 0; }
+function err.__LIST__(){ printf "%s\n" ${__ERR_LIST[@]}; return 0; }
+
+# CONSTANTES
+declare -r __ERR_LIB='err'	# Nome da biblioteca
+# Lista dos métodos reservados 
+declare -ra __ERR_LIST=(err.__INIT__ err.__NAME__ err.__LIST__)
+
+# Mensagens de erro
+declare -r __ERR_UNKNOWN="Erro desconhecido."
+declare -r __ERR_SINTAX="Sintaxe erro."
+declare -r __ERR_INT_POSITIVE="Deve ser um inteiro positivo."
+declare -r __ERR_MANY_PARAM="Excesso de parâmetros."
+declare -r __ERR_EXP_NULL="Expressão não pode ser nula."
+declare -r __ERR_PARAM_NULL="Parâmetro não pode ser nulo."
+declare -r __ERR_VAR_TYPE="Tipo da variável inválido."
+declare -r __ERR_OP_ATTR="Requer operador de atribuição"
+
+# Argumentos
+declare -r __ERR_ARG_NOT_REQUIRED="Função não requer argumentos."
+declare -r __ERR_CHAR_ONLY="Precisa ser um único caractere."
+declare -r __ERR_BASE_INVALID="Codificação de base inválida."
+# Classe
+declare -r __ERR_CLASS_NAME_NULL="Nome da classe requerido."
+declare -r __ERR_CLASS_NAME_INVALID="Não foi possivel registrar a classe, nome da classe é um tipo reservado."
+declare -r __ERR_CLASS_METHOD_READONLY="Método é somente leitura."
+declare -r __ERR_CLASS_TYPE_INCOMPATIBLE="Tipo da classe imcompatível."
+declare -r __ERR_VAR_READONLY="Variável é somente leitura."
+
+# parametros
+declare -r __P_FORECOLOR="Cor do texto"
+declare -r __P_BACKCOLOR="Cor de fundo"
+declare -r __P_COLOR="Cor"
+declare -r __P_VOID="void"
+declare -r __P_CLASS="Classe"
+declare -r __P_EXPRESSION="Expressão"
+declare -r __P_PARAM="Parâmetro"
+declare -r __P_DELIMITER="Delimitador"
+declare -r __P_SEARCH="Busca"
+declare -r __P_REPLACE="Substituição"
+declare -r __P_CHAR="Caractere"
+declare -r __P_BASE="Base"
+declare -r __P_FORMAT="Formato"
+declare -r __P_LENGTH="Comprimento"
+declare -r __P_COUNT="Quantidade"
+declare -r __P_START="Inicio"
+declare -r __P_VAR="Variável"
+declare -r __P_INDEX="Ìndice"
+declare -r __P_KEY="Chave"
+
+function error_exit()
+{
+	# Função: error_exit script linha função parametro valor mensagem
+	# 
+	# Lẽ o antipenultimo elemento dos array's 'FUNCNAME' e 'BASH_LINENO'
+	# FUNCNAME = Nome da função
+	# BASH_LINENO = Número da linha
+	# Ambos armazenam valores definidos em niveis 'call'
+	local __line="${BASH_LINENO[$((${#BASH_LINENO[*]}-2))]}"; __line=${__line:--}
+	local __func="${FUNCNAME[$((${#FUNCNAME[*]}-2))]}"
+	local -n __param=${1:-__P_VOID} 					# Define o valor padrão se o respectivo argumento for nulo.
+	local __value=${2:-null}      					# '_param' e '_messsage' são declaradas do tipo 'Referência de nome.'
+	local -n __message=${3:-__ERR_UNKNOWN}   			# não recebendo valor, mas o nome da variavel da qual é um ponteiro.
+
+	# Imprime mensagem de erro
+	printf "[%s]: Linha %s: @%s: #%s: ='%s': %s\n" \
+	"$__SCRIPT__" "$__line" "$__func" "$__param" "$__value" "$__message" 
+
+	# Finaliza script com status 1
+	exit 1
+}
+
+function error_sintax()
+{
+	# Função: error_sintax script linha commando
+	local __line="${BASH_LINENO[$((${#BASH_LINENO[*]}-2))]}"; __line=${_line:--}
+	local -n __message=${1:-__ERR_UNKNOWN}
+	local __command="$2"
+
+	# Imprime mensagem
+	printf "[%s]: Linha %s: %s\nComando: %s\n" \
+	"$__SCRIPT__" "$__line" "$__message" "$__command"
+
+	# Lẽ os detalhes do erro gerado
+	echo -n "Detalhes: "; sed 's/.*://g;s/ //' <&3
+	# Restaurar o descritor '2' e limpa o '3'
+	exec 2>/dev/stderr 3<&-
+
+	# Finaliza
+	exit 1
+	
+}
+
+# Trata o SIGNAL 'ERR', chamando a função 'error_sintax'
+# 'ERR' A Condição de evento no shell na saida stderr
+#trap 'error_sintax err_sintax "$BASH_COMMAND"' ERR
+
+# Funções somente leitura
+declare -rf error_exit

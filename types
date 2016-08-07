@@ -1,0 +1,1563 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------------------
+#   Biblioteca: str (string)
+#   Criado por: Juliano Santos
+#   Data: 10 de Julho de 2016
+#   Email: juliano.santos.bm@gmail.com
+#
+#	Biblioteca para defição de tipos de variáveis em classes e métodos.
+#	Classes: var, array, dict, struct e typedef
+#
+#	Classe: var
+#	Métodos: var.len, var.reverse, var.toupper, var.tolower, var.isalpha, var.clear
+#			 var.isdigit, var.isalnum, var.isblank, var.islower, var.isupper
+#			 var.join, var.count, var.find, var.replace, var.mid, var.swapcase
+#			 var.value, var.char, var.squeeze, var.left, var.right, var.repeat
+#
+#	Classe: array
+#	Mètodos: array.len, array.max, array.min, array.list, array.count, array.append
+#			 array.index, array.insert, array.remove, array.reverse, array.sort
+#			 array.clear, array.listindex, array.comp, array.copy, array.item
+#
+#	Classe: dict
+#	Métodos: dict.keys, dict.add, dict.items, dict.existskey, dict.values
+#			 dict.update, dict.copy, dict.clear
+#
+#	Classe: struct
+#	Métodos: struct.add, struct.remove, struct.list, struct.values,
+#			  struct.copy, struct.clear
+#
+#	DOC:
+#
+# 	A documentação está contida no arquivo types.hlp
+#-----------------------------------------------------------------------------------
+
+# Bibliotecas externas
+source me
+source err
+source str
+
+# Se a biblioteca já foi carregada.
+if types.__INIT__ 2>/dev/null; then
+    return $?; fi
+
+# Biblioteca
+declare -r __TYPES_LIB='types'
+
+# Inicialização de instruções reservadas.
+# __INIT__: Retorna um inteiro para o status de inicialização da biblioteca
+# __NAME__: Retorna o nome base da biblioteca
+# __LIST__: Lista os métodos de todas as classes.
+# __CONST__: Lista as constantes a nível de compilação
+function types.__INIT__() { return 0; }
+function types.__NAME__() { printf "%s\n" "$__TYPES_LIB"; }
+function types.__LIST__() { printf "%s\n" "${__TYPES_LIST[*]}" | sed 's/ /, /g'; }
+function types.__CONST__(){ printf "%s\n" "${__TYPES_CONST[*]}" | sed 's/ /, /g'; }
+
+# Elementos contidos em '__TYPES_LIST' são somente leitura,
+# intrínseco a execuação e importação da biblioteca
+declare -ar __TYPES_LIST=(
+# Métodos
+# Variáveis
+var.len
+var.reverse
+var.toupper
+var.tolower
+var.isalpha
+var.isdigit
+var.isalnum
+var.isblank
+var.islower
+var.isupper
+var.join
+var.count
+var.find
+var.replace
+var.mid
+var.swapcase
+var.value
+var.char
+var.squeeze
+var.left
+var.right
+var.repeat
+var.clear
+# Array
+array.len
+array.max
+array.min
+array.list
+array.count
+array.append
+array.index
+array.insert
+array.remove
+array.reverse
+array.sort
+array.clear
+array.listindex
+array.comp
+array.copy
+array.item
+# Dicionário
+dict.keys
+dict.add
+dict.items
+dict.existskey
+dict.values
+dict.update
+dict.copy
+dict.clear
+# Estrutura
+struct.add
+struct.remove
+struct.list
+struct.values
+struct.copy
+struct.clear
+)
+
+# Status da classe
+# 1 - Não inicializada
+# 0 - Incializada
+declare -i __VAR_CLASS_INIT=1
+declare -i __ARRAY_CLASS_INIT=1
+declare -i __DICT_CLASS_INIT=1
+declare -i __STRUCT_CLASS_INIT=1
+	
+# Classe var
+
+function var()
+{
+	local __ClassName
+	local __Method
+	 # Verifica se há conflitos com nomes de classe reservadas.
+    # Os métodos são registrados seguindos do prefixo da classe.
+    # Exemplo: var.len
+    #           |   |____ Método
+    #           |________ Classe
+    #
+    # Verifica possivel conflito, comparando com __TYPES_CLASS
+	for __ClassName in $@; do
+		if [ "$(echo "${__CLASS_LIB[@]}" | egrep -owm1 "$__ClassName")" ]; then
+            error_exit __P_CLASS "$__ClassName" __ERR_CLASS_NAME_INVALID; fi; done		
+
+	# Inicia os métodos da classe 'var'
+	if [ $__VAR_CLASS_INIT -eq 1 ]
+	then
+		function var.__init__()
+		{
+		 # Verifica se há argumentos
+         [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+		
+		# Lẽ o nome das classes passadas	
+		for __ClassName in $@
+		do
+			# Lẽ os métodos
+			for __Method in ${__TYPES_LIST[@]}
+			do
+				# Lista todos os métodos contidos em '__TYPES_LIST'
+				# Se a classe do método for igual a classe do '__init__'
+				# aplica
+				if [ "${__Method%%.*}" == "$__VAR_CLASS_NAME" ]; then
+					# Obtem o método da classe
+					__Method=${__Method#*.}
+					# Limpa o método se existir e registra o novo
+					# Se for somente leitura, imprime mensagem de erro e sai da função
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+                        error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+                    eval "function $__ClassName.$__Method(){ $__VAR_CLASS_NAME.$__Method $__ClassName \"\$@\"; }" # Definindo
+				fi
+			done
+			# Método registrados
+			eval "function $__ClassName.del() { $__VAR_CLASS_NAME.__del__ $__ClassName; }"
+            eval "function $__ClassName.type() { $__VAR_CLASS_NAME.__type__; }"
+			# Declara variavel
+			declare -g $__ClassName
+		done
+		}
+		
+		function var.__del__()
+		{
+			# Verifica se o nome da classe foi passado. 
+            [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+			
+			# Lẽ as classes passadas em 'str'
+            for __ClassName in $@; do
+                # Verifica se o tipo da classe é compativel.
+                # Nota: Class: @classe
+				if [ "$($__ClassName.type 2>/dev/null)" != "$__VAR_CLASS_TYPE" ]; then
+    	                error_exit __P_CLASS "$__ClassName" __ERR_CLASS_TYPE_INCOMPATIBLE; fi
+        		# Limpa todos os métodos da classe
+				# Lẽ o nome das classes passadas	
+				for __Method in ${__TYPES_LIST[@]}
+				do
+					# Lista todos os métodos contidos em '__TYPES_LIST'
+					# Se a classe do método for igual a classe do '__init__'
+					# aplica
+					if [ "${__Method%%.*}" == "$__VAR_CLASS_NAME" ]; then
+						# Obtem o método da classe
+						__Method=${__Method#*.}
+						# Limpa o método da classe
+						if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+							error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+					fi
+				done
+				# Limpa método reservados
+				if ! unset -f $__ClassName.del $__ClassName.type 2>/dev/null; then
+                    error_exit __P_CLASS "$__ClassName" __ERR_CLASS_METHOD_READONLY; fi
+			done
+
+			# retorno
+			return 0
+		}
+
+		function var.__type__()
+        {
+            # Imprime  
+            printf "%s\n" "$__VAR_CLASS_TYPE"
+            return 0;
+        }
+		
+		function var.len()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+		
+			declare -n __ref="$1"		# Ponteiro
+			printf "%d\n" "${#__ref}"	# Imprime comprimento
+			
+			# retorno
+			return 0	
+		}
+		
+		function var.reverse()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+			
+			declare -n __ref="$1"	# Ponteiro
+			str.reverse "$__ref"	# Imprime
+            
+			# retorno
+            return 0
+		}
+		
+		function var.toupper()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.toupper "$__ref" # Chama a função str.toupper
+			
+			return 0
+		}	
+		
+		function var.tolower()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.tolower "$__ref" # Chama a função str.tolower
+			
+			return 0
+		}	  
+		
+		function var.isalpha()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.isalpha "$__ref" # Chama a função str.isalpha
+			
+			return 0
+		}	  
+		
+		function var.isdigit()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.isdigit "$__ref" # Chama a função str.isdigit
+			
+			return 0
+		}	  
+		
+		function var.isalnum()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.isalnum "$__ref" # Chama a função str.isalnum
+			
+			return 0
+		}	  
+		
+		function var.isblank()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.isblank "$__ref" # Chama a função str.isblank
+			
+			return 0
+		}
+		
+		function var.islower()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.islower "$__ref" # Chama a função str.islower
+			
+			return 0
+		}
+		
+		function var.isupper()
+		{
+			# Lẽ o número de argumentos passados
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi	
+				
+			# Ponteiro	
+			declare -n __ref="$1"
+			str.isupper "$__ref" # Chama a função str.islower
+			
+			return 0
+		}
+		
+		function var.join()
+		{
+			# Lê o numero de argumentos passados.
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			declare -n __ref="$1"	# Ponteiro
+			__ref+="$2"				# Incrementa variavel
+			
+			# retorno
+			return 0	
+		}
+
+		function var.count()
+		{
+			# Lê a quantidade e trata os argumentos
+			if [ ${#@} -gt 4 ]; then
+				error_exit __P_PARAM "${*:5}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then								# Variável
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$3"  && "$3" != ?(+)+([0-9]) ]]; then		# Inicio
+				error_exit __P_START "$3" __ERR_INT_POSITIVE
+			elif [[ "$4"  && "$4" != ?(+)+([0-9]) ]]; then		# Comprimento
+				error_exit __P_LENGTH "$4" __ERR_INT_POSITIVE
+			fi
+			
+			declare -n __ref="$1"	# Ponteiro
+			local __obj="$2"		# Expressão
+            local -i __start=${3:-0}	# Inicio: Valor padrão '0'
+            local -i __len=${4:-$($1.len)}	# Comprimento: Valor padrão 'comprimento da expressão'
+
+			# Imprime número de ocorrencia em uma subcadeia string.
+            printf "%s\n" "${__ref:$__start:$__len}" | egrep -o "$__obj" | wc -l
+			# Retorno
+            return 0
+		}
+
+		function var.find()
+		{
+			# Lê a quantidade e trata os argumentos
+			if [ ${#@} -gt 4 ]; then
+				error_exit __P_PARAM "${*:5}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then								# Variável
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$3"  && "$3" != ?(+)+([0-9]) ]]; then		# Inicio
+				error_exit __P_START "$3" __ERR_INT_POSITIVE
+			elif [[ "$4"  && "$4" != ?(+)+([0-9]) ]]; then		# Comprimento
+				error_exit __P_LENGTH "$4" __ERR_INT_POSITIVE
+			fi
+		
+			local -n __ref="$1"						# Ponteiro
+            local __obj="$2"						# Expressão
+            local -i __start=${3:-0}				# Inicio
+            local -i __len=${4:-$($1.len)}			# Comprimento
+            local __swap=${__ref:$__start:$__len}	# |/ Variaveis de troca
+            local __swap2=${__swap/$__obj*}			# |\
+			
+			# Imprime
+            [ ${#__swap} -eq ${#__swap2} ] && echo -1 || echo $((${#__swap2}+1))
+
+            return 0
+	
+		}
+		
+		function var.replace()
+		{
+			# Lê a quantidade e trata os argumentos
+			if [ ${#@} -gt 4 ]; then
+				error_exit __P_PARAM "${*:5}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then								# Variável
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_EXPRESSION "$2" __ERR_PARAM_NULL
+			elif [[ "$4"  && "$4" != ?(+)+([0-9]) ]]; then		# Comprimento
+				error_exit __P_LENGTH "$4" __ERR_INT_POSITIVE
+			fi
+			
+			local -n __ref="$1"			# Ponteiro
+            local __old="$2"			# Expressão a ser substituida
+            local __new="$3"			# Expressão de subsittuição
+            local -i __max=${4:-0}		# max. substituições. padrão (tudo)
+            local __obj="$__ref"		# Variável de troca
+
+			# Se número de substituições for omitido, define valor padrão
+			# substituindo todas as ocorrênciwas encontradas na expressão
+            if [ $__max -eq 0 ]; then
+                printf "%s\n" "$__obj" | sed "s/$__old/$__new/g"
+            else
+				# Substitui __max.vezes a ocorrência na expressão
+				# armazenando a nova expressão em '__obj' a cada substituição
+				# sobrescrevendo as ocorrências antigas.
+                while [ $__max -gt 0 ]; do
+                    __obj="$(echo "$__obj" | sed "s/$__old/$__new/")"
+                    ((__max--)); done
+                printf "%s\n" "$__obj"
+            fi
+
+			# retorno
+            return 0
+
+		}
+		
+		function var.mid()
+		{
+			# Lê o numero de argumentos e trata
+			if [ ${#@} -gt 3 ]; then
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_START "$2" __ERR_INT_POSITIVE
+            elif [[ "$3" && "$3" != ?(+)+([0-9]) ]]; then
+				error_exit __P_LENGTH "$3" __ERR_INT_POSITIVE
+            fi
+			
+			local -n __ref="$1"				# Ponteiro
+			local -i __start=${2:-0}		# Inicio
+			local -i __len=${3:-$($1.len)}	# Comprimento
+			
+			# Imprime a subcadeia string da expressão
+			printf "%s\n" "${__ref:$__start:$__len}"
+			
+			return 0
+		}
+		
+		function var.swapcase()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Insere tag em todos os caracteres.
+			# Maiúsculos - tag '[u]'
+			# Minúsculos - tag '[l]'
+			# Aplica regex convertendo as tags para a formatações equivalentes
+			# [u]a -> A
+			# [l]A -> a
+			printf "%s\n" "$__ref" | sed 's/\([a-z]\)/[u]&/g;s/\([A-Z]\)/[l]&/g;s/\[l\]\(.\)/\L\1/g;s/\[u\]\(.\)/\U\1/g'
+			
+			# Retorno
+			return 0	
+		}
+
+		function var.char()
+		{
+			# Lê e trata os parametros
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_START "$2" __ERR_INT_POSITIVE
+			fi	
+			
+			local -n __ref="$1"			# Ponteiro
+			local -i __start=${2:-0}	# Inicio
+			
+			# Imprime o caractere na posição "__start"
+			printf "%c\n" "${__ref:$__start:1}"
+			
+			# retorno
+			return 0
+		}
+		
+		function var.squeeze()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+            elif [[ "$2" && "${#2}" -gt 1 ]]; then
+				error_exit __P_CHAR "$2" __ERR_CHAR_ONLY
+            fi
+				
+			local -n __ref="$1"		# Ponteiro
+			local __char="$2"		# Caractere
+			
+			# Suprime '__char' em "__ref"
+            printf "%s\n" "$__ref" | tr -s "$__char"
+			
+			# retorno
+            return 0
+		}
+		
+		function var.left()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+			
+			local -n __ref="$1"				# Ponteiro
+			local -i __len=${2:-$($1.len)}	# Comprimento
+			
+			printf "%s\n" "${__ref:0:$__len}"
+			
+			return 0
+				
+		}
+	
+		function var.right()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+			
+			local -n __ref="$1"				# Ponteiro
+			local -i __len=${2:-$($1.len)}	# Comprimento
+			
+			printf "%s\n" "${__ref: -$__len}"
+			
+			return 0
+			
+		}
+		
+		function var.repeat()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_LENGTH "$2" __ERR_INT_POSITIVE
+			fi
+		
+			local -n __ref="$1"
+            local -i __rep=${2:-1}
+            local __obj
+			
+			# Repete expressão '__rep'.vezes
+            while [ $__rep -gt 0 ]; do
+                printf "%s" "$__ref"; ((__rep--)); done
+
+			# CRLF
+            echo
+			
+			return 0
+		}
+		
+		function var.value()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+	
+			local -n __ref="$1"
+			printf "%s\n" "$__ref"
+		
+			return 0
+		}
+		
+		function var.clear()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			if ! unset "$1" 2>/dev/null; then
+				error_exit __P_VAR "$1" __ERR_VAR_READONLY;fi
+			
+			var.__init__ "$1"
+		}	
+			
+		############  Propriedades da classe  #################
+        # Variáveis
+        readonly __VAR_CLASS_INIT=0
+        readonly __VAR_CLASS_NAME='var'
+        readonly __VAR_CLASS_TYPE="Class: @$__VAR_CLASS_NAME"
+
+        # Instruções reservadas.
+        readonly -f var.__init__ var.__del__ var.__type__
+
+        return 0
+
+	fi
+	
+	var.__init__ $@
+}
+
+#----------------------------------------------------------------------
+#	Classe ARRAY
+#----------------------------------------------------------------------
+
+function array()
+{
+	local __ClassName
+	local __Method
+	 # Verifica se há conflitos com nomes de classe reservadas.
+    # Os métodos são registrados seguindos do prefixo da classe.
+    # Exemplo: var.len
+    #           |   |____ Método
+    #           |________ Classe
+    #
+    # Verifica possivel conflito, comparando com __TYPES_CLASS
+	for __ClassName in $@; do
+		if [ "$(echo "${__CLASS_LIB[@]}" | egrep -owm1 "$__ClassName")" ]; then
+            error_exit __P_CLASS "$__ClassName" __ERR_CLASS_NAME_INVALID; fi; done		
+
+	# Inicia os métodos da classe 'var'
+	if [ $__ARRAY_CLASS_INIT -eq 1 ]
+	then
+		function array.__init__()
+		{
+		 # Verifica se há argumentos
+         [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+		
+		# Lẽ o nome das classes passadas	
+		for __ClassName in $@
+		do
+			# Lẽ os métodos
+			for __Method in ${__TYPES_LIST[@]}
+			do
+				# Lista todos os métodos contidos em '__TYPES_LIST'
+				# Se a classe do método for igual a classe do '__init__'
+				# aplica
+				if [ "${__Method%%.*}" == "$__ARRAY_CLASS_NAME" ]; then
+					# Obtem o método da classe
+					__Method=${__Method#*.}
+					# Limpa o método se existir e registra o novo
+					# Se for somente leitura, imprime mensagem de erro e sai da função
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+                        error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+                    eval "function $__ClassName.$__Method(){ $__ARRAY_CLASS_NAME.$__Method $__ClassName \"\$@\"; }" # Definindo
+				fi
+			done
+			# Método registrados
+			eval "function $__ClassName.del() { $__ARRAY_CLASS_NAME.__del__ $__ClassName; }"
+            eval "function $__ClassName.type() { $__ARRAY_CLASS_NAME.__type__; }"
+			# Declara variavel
+			declare -g $__ClassName
+		done
+		}
+		
+		function array.__del__()
+		{
+			# Verifica se o nome da classe foi passado. 
+            [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+			
+			# Lẽ as classes passadas em 'str'
+            for __ClassName in $@; do
+                # Verifica se o tipo da classe é compativel.
+                # Nota: Class: @classe
+				if [ "$($__ClassName.type 2>/dev/null)" != "$__ARRAY_CLASS_TYPE" ]; then
+    	                error_exit __P_CLASS "$__ClassName" __ERR_CLASS_TYPE_INCOMPATIBLE; fi
+        		# Limpa todos os métodos da classe
+				# Lẽ o nome das classes passadas	
+				for __Method in ${__TYPES_LIST[@]}
+				do
+					# Lista todos os métodos contidos em '__TYPES_LIST'
+					# Se a classe do método for igual a classe do '__init__'
+					# aplica
+					if [ "${__Method%%.*}" == "$__ARRAY_CLASS_NAME" ]; then
+						# Obtem o método da classe
+						__Method=${__Method#*.}
+						# Limpa o método da classe
+						if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+							error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+					fi
+				done
+				# Limpa método reservados
+				if ! unset -f $__ClassName.del $__ClassName.type 2>/dev/null; then
+                    error_exit __P_CLASS "$__ClassName" __ERR_CLASS_METHOD_READONLY; fi
+			done
+
+			# retorno
+			return 0
+		}
+
+		function array.__type__()
+        {
+            # Imprime  
+            printf "%s\n" "$__ARRAY_CLASS_TYPE"
+            return 0
+        }
+
+		function array.len()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+
+			# Imprime o número de elementos do array
+			printf "%s\n" "${#__ref[@]}"
+
+			return 0
+		}
+
+		function array.max()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Lê os indices de '__ref', obtem o último indice e imprime seu conteudo.
+			printf "%s\n" "${__ref[$(echo ${!__ref[@]} | sed 's/ /\n/g' | awk 'END {print}')]}"
+			
+			# retorno
+			return 0
+		}
+		
+		function array.min()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Lê os indices de '__ref', obtem o primeiro indice e imprime seu conteudo.
+			printf "%s\n" "${__ref[$(echo ${!__ref[@]} | sed 's/ /\n/g' | awk 'NR==1 {print}')]}"
+		
+	
+			# retorno
+			return 0
+			
+		}
+		
+		function array.list()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Imprime os elementos do array	
+			printf "%s\n" "${__ref[@]}"
+		
+			return 0
+		
+		}
+
+		function array.count()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -i __index=0 __count=0
+			local -n __ref="$1"
+			
+			# Lẽ os indices do elementos	
+			for __index in "${!__ref[@]}"; do
+				# Se "$2" for igual ao elemento da posição '__index' em '__ref'
+				# incrementa '__count'
+            	[ "$2" == "${__ref[$__index]}" ] && ((__count++)); done
+
+			# Imprime valor de count
+			printf "%d\r\n" "$__count"
+
+	        return 0
+			
+		}
+		
+		function array.append()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Incrementa o último indice do array
+			__ref[$(($(echo "${!__ref[@]}" | sed 's/ /\n/g' | awk 'END {print}')+1))]="$2"
+		}
+		
+		function array.index()
+		{
+			# Trata os parametros da função
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+
+			local -n __ref="$1"			# Ponteiro
+			local __index=0 __match=-1
+
+			# Lẽ os indices do array
+			for __index in "${!__ref[@]}"; do
+				# Se "$2" for igual ao elemento na posição '_index' em '__ref', 
+				# armazena o valor de '__index' em '__match', sobrescrevendo o valor '-1' com o indice da ocorrência.
+				if [ "$2" == "${__ref[$__index]}" ]; then	
+                	__match=$__index; break; fi; done
+			
+			# Imprime o valor de '__match'
+			printf "%d\n" "$__match"
+
+        	return 0
+		}		
+		
+		function array.item()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+        	elif [[ "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_INDEX "$2" __ERR_INT_POSITIVE
+	        fi
+			
+			local -n __ref="$1" # Ponteiro
+			
+			# Imprime o elemento do indice
+			printf "%s\n" "${__ref[$2]}"
+			
+			return 0
+				
+		}
+		
+		function array.insert()
+		{
+			if [ ${#@} -gt 3 ]; then
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+        	elif [[ "$2" != ?(+)+([0-9]) ]]; then
+				error_exit __P_INDEX "$2" __ERR_INT_POSITIVE
+	        fi
+			
+			local -n __ref="$1"		# Ponteiro
+			__ref[$2]="$3"			# Insere elemento na posição '$2' em "__ref"
+			
+			return 0	
+		}
+		
+		function array.remove()
+		{	# Trata os argumentos
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1" 	# Ponteiro
+			local __index=0
+			
+			# Lê o indice dos elementos
+			for __index in "${!__ref[@]}"; do
+				# Se "$2" for igual ao elemento na posição '__index'
+				# em '__ref', limpa o indice
+	           if [ "$2" == "${__ref[$__index]}" ]; then
+                unset __ref[$__index]; fi; done
+
+	        return 0
+			
+		}
+	
+		function array.reverse()
+		{
+			# Trata os parametros
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+
+			local -n __ref="$1"
+			local __obj
+			
+					
+			for __obj in "${__ref[@]}"; do
+				echo "$__obj"; done | tac
+			
+			return 0
+		}
+	
+		function array.sort()
+		{
+			# Trata os parametros
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+
+			local -n __ref="$1"		# Ponteiro
+			local __obj
+
+			# Lê os elementos, aplicando '| sort' no loop
+			for __obj in "${__ref[@]}"; do
+				echo "$__obj"; done | sort
+			
+			return 0
+			
+		}
+
+		function array.clear()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+				
+			local -n __ref="$1"
+			unset __ref
+
+			return 0
+		}
+		
+		function array.listindex()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+				
+			local -n __ref="$1"
+			printf "%s\n" "${!__ref[@]}"
+			
+			return 0
+		}
+		
+		function array.comp()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_VAR "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref1="$1"
+			local -n __ref2="$2"
+			
+			[[ "${__ref1[@]}" == "${__ref2[@]}" ]] && echo 0 || echo -1
+				
+			return 0
+		}
+		
+		function array.copy()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_VAR "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref1="$1"
+			local -n __ref2="$2"
+			
+			__ref2=("${__ref1[@]}")
+			
+			return 0
+		}	
+			
+		############  Propriedades da classe  #################
+        # Variáveis
+        readonly __ARRAY_CLASS_INIT=0
+        readonly __ARRAY_CLASS_NAME='array'
+        readonly __ARRAY_CLASS_TYPE="Class: @$__ARRAY_CLASS_NAME"
+
+        # Instruções reservadas.
+        readonly -f array.__init__ array.__del__ array.__type__
+
+        return 0
+
+	fi
+		
+	array.__init__ $@
+}
+
+#----------------------------------------------------------------------
+#	Classe DICT
+#----------------------------------------------------------------------
+
+function dict()
+{
+	local __ClassName
+	local __Method
+	 # Verifica se há conflitos com nomes de classe reservadas.
+    # Os métodos são registrados seguindos do prefixo da classe.
+    # Exemplo: var.len
+    #           |   |____ Método
+    #           |________ Classe
+    #
+    # Verifica possivel conflito, comparando com __TYPES_CLASS
+	for __ClassName in $@; do
+		if [ "$(echo "${__CLASS_LIB[@]}" | egrep -owm1 "$__ClassName")" ]; then
+            error_exit __P_CLASS "$__ClassName" __ERR_CLASS_NAME_INVALID; fi; done		
+
+	# Inicia os métodos da classe 'var'
+	if [ $__DICT_CLASS_INIT -eq 1 ]
+	then
+		function dict.__init__()
+		{
+		 # Verifica se há argumentos
+         [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+		
+		# Lẽ o nome das classes passadas	
+		for __ClassName in $@
+		do
+			# Lẽ os métodos
+			for __Method in ${__TYPES_LIST[@]}
+			do
+				# Lista todos os métodos contidos em '__TYPES_LIST'
+				# Se a classe do método for igual a classe do '__init__'
+				# aplica
+				if [ "${__Method%%.*}" == "$__DICT_CLASS_NAME" ]; then
+					# Obtem o método da classe
+					__Method=${__Method#*.}
+					# Limpa o método se existir e registra o novo
+					# Se for somente leitura, imprime mensagem de erro e sai da função
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+                        error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+                    eval "function $__ClassName.$__Method(){ $__DICT_CLASS_NAME.$__Method $__ClassName \"\$@\"; }" # Definindo
+				fi
+			done
+			# Método registrados
+			eval "function $__ClassName.del() { $__DICT_CLASS_NAME.__del__ $__ClassName; }"
+            eval "function $__ClassName.type() { $__DICT_CLASS_NAME.__type__; }"
+			# Declara variavel
+			declare -Ag $__ClassName
+		done
+		}
+		
+		function dict.__del__()
+		{
+			# Verifica se o nome da classe foi passado. 
+            [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+			
+			# Lẽ as classes passadas em 'str'
+            for __ClassName in $@; do
+                # Verifica se o tipo da classe é compativel.
+                # Nota: Class: @classe
+				if [ "$($__ClassName.type 2>/dev/null)" != "$__DICT_CLASS_TYPE" ]; then
+    	                error_exit __P_CLASS "$__ClassName" __ERR_CLASS_TYPE_INCOMPATIBLE; fi
+        		# Limpa todos os métodos da classe
+				# Lẽ o nome das classes passadas	
+				for __Method in ${__TYPES_LIST[@]}
+				do
+					# Lista todos os métodos contidos em '__TYPES_LIST'
+					# Se a classe do método for igual a classe do '__init__'
+					# aplica
+					if [ "${__Method%%.*}" == "$__DICT_CLASS_NAME" ]; then
+						# Obtem o método da classe
+						__Method=${__Method#*.}
+						# Limpa o método da classe
+						if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+							error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+					fi
+				done
+				# Limpa método reservados
+				if ! unset -f $__ClassName.del $__ClassName.type 2>/dev/null; then
+                    error_exit __P_CLASS "$__ClassName" __ERR_CLASS_METHOD_READONLY; fi
+			done
+
+			# retorno
+			return 0
+		}
+
+		function dict.__type__()
+        {
+            # Imprime  
+            printf "%s\n" "$__DICT_CLASS_TYPE"
+            return 0
+        }
+
+		function dict.add()
+		{
+			if [ ${#@} -gt 3 ]; then
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_KEY "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1"
+			__ref["$2"]="$3"
+	
+			return 0
+			
+		}
+		
+		function dict.items()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+		
+			local -n __ref="$1"
+			local __key
+
+		 	for __key in "${!__ref[@]}"; do 
+            	printf "[%s]=%s\n" "$__key" "${__ref["$__key"]}"; done
+		} 
+		
+		function dict.keys()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1"
+			
+			printf "%s\n" "${!__ref[@]}"
+			
+			return 0
+		}
+		
+		function dict.existskey()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_KEY "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1"
+			local __key
+			local __match=1
+
+			for __key in "${!__ref[@]}"; do
+				[ "$2" == "$__key" ] && { __match=0; break; } ; done
+		
+			printf "%d\n" "$__match"
+	
+			return 0
+		}
+				
+		function dict.values()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref="$1"
+			
+			printf "%s\n" "${__ref[@]}"
+
+			return 0
+		}
+						
+		function dict.update()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_VAR "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref1="$1"
+			local -n __ref2="$2"
+			local __key
+
+			for __key in "${!__ref2[@]}"; do
+				__ref1["$__key"]="${__ref2["$__key"]}"; done
+			
+			return 0
+			
+		}
+		
+		function dict.copy()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_VAR "$2" __ERR_PARAM_NULL
+			fi
+			
+			local -n __ref1="$1"
+			local -n __ref2="$2"
+			local __key
+
+			for __key in "${!__ref1[@]}"; do
+				__ref2["$__key"]="${__ref1["$__key"]}"; done
+			
+			return 0
+			
+		}
+		
+		function dict.clear()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			unset $1; dict.__init__ $1
+			
+			return 0
+		}	
+
+		############  Propriedades da classe  #################
+        # Variáveis
+        readonly __DICT_CLASS_INIT=0
+        readonly __DICT_CLASS_NAME='dict'
+        readonly __DICT_CLASS_TYPE="Class: @$__DICT_CLASS_NAME"
+
+        # Instruções reservadas.
+        readonly -f dict.__init__ dict.__del__ dict.__type__
+
+        return 0
+
+	fi
+		
+	dict.__init__ $@
+}
+
+function struct()
+{
+	local __ClassName
+	local __Method
+	 # Verifica se há conflitos com nomes de classe reservadas.
+    # Os métodos são registrados seguindos do prefixo da classe.
+    # Exemplo: var.len
+    #           |   |____ Método
+    #           |________ Classe
+    #
+    # Verifica possivel conflito, comparando com __TYPES_CLASS
+	for __ClassName in $@; do
+		if [ "$(echo "${__CLASS_LIB[@]}" | egrep -owm1 "$__ClassName")" ]; then
+            error_exit __P_CLASS "$__ClassName" __ERR_CLASS_NAME_INVALID; fi; done		
+
+	# Inicia os métodos da classe 'var'
+	if [ $__STRUCT_CLASS_INIT -eq 1 ]
+	then
+		function struct.__init__()
+		{
+		 # Verifica se há argumentos
+         [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+		
+		# Lẽ o nome das classes passadas	
+		for __ClassName in $@
+		do
+			# Lẽ os métodos
+			for __Method in ${__TYPES_LIST[@]}
+			do
+				# Lista todos os métodos contidos em '__TYPES_LIST'
+				# Se a classe do método for igual a classe do '__init__'
+				# aplica
+				if [ "${__Method%%.*}" == "$__STRUCT_CLASS_NAME" ]; then
+					# Obtem o método da classe
+					__Method=${__Method#*.}
+					# Limpa o método se existir e registra o novo
+					# Se for somente leitura, imprime mensagem de erro e sai da função
+					if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+                        error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+                    eval "function $__ClassName.$__Method(){ $__STRUCT_CLASS_NAME.$__Method $__ClassName \"\$@\"; }" # Definindo
+				fi
+			done
+			# Método registrados
+			eval "function $__ClassName.del() { $__STRUCT_CLASS_NAME.__del__ $__ClassName; }"
+            eval "function $__ClassName.type() { $__STRUCT_CLASS_NAME.__type__; }"
+			# Declara variavel
+			declare -g $__ClassName
+		done
+		}
+		
+		function struct.__del__()
+		{
+			# Verifica se o nome da classe foi passado. 
+            [ ! "$1" ] && error_exit __P_CLASS "" __ERR_CLASS_NAME_NULL
+			
+			# Lẽ as classes passadas em 'str'
+            for __ClassName in $@; do
+                # Verifica se o tipo da classe é compativel.
+                # Nota: Class: @classe
+				if [ "$($__ClassName.type 2>/dev/null)" != "$__STRUCT_CLASS_TYPE" ]; then
+    	                error_exit __P_CLASS "$__ClassName" __ERR_CLASS_TYPE_INCOMPATIBLE; fi
+        		# Limpa todos os métodos da classe
+				# Lẽ o nome das classes passadas	
+				for __Method in ${__TYPES_LIST[@]}
+				do
+					# Lista todos os métodos contidos em '__TYPES_LIST'
+					# Se a classe do método for igual a classe do '__init__'
+					# aplica
+					if [ "${__Method%%.*}" == "$__STRUCT_CLASS_NAME" ]; then
+						# Obtem o método da classe
+						__Method=${__Method#*.}
+						# Limpa o método da classe
+						if ! unset -f $__ClassName.$__Method 2>/dev/null; then
+							error_exit __P_CLASS "$__ClassName.$__Method" __ERR_CLASS_METHOD_READONLY; fi
+					fi
+				done
+				# Limpa método reservados
+				if ! unset -f $__ClassName.del $__ClassName.type 2>/dev/null; then
+                    error_exit __P_CLASS "$__ClassName" __ERR_CLASS_METHOD_READONLY; fi
+			done
+
+			# retorno
+			return 0
+		}
+
+		function struct.__type__()
+        {
+            # Imprime  
+            printf "%s\n" "$__STRUCT_CLASS_TYPE"
+            return 0
+        }
+		
+		function struct.add()
+		{
+			if [[ ! "$1" || ! "$2" ]]; then
+				error_exit __P_VAR "" __ERR_PARAM_NULL; fi
+
+			for __VarName in "${@:2}"; do
+				eval "struct_$1_$__VarName="
+				eval "function $1.$__VarName(){ struct.__SetOrGet struct_$1_$__VarName \"\$@\"; }"; done
+			
+			return 0
+		}
+		
+		function struct.remove()
+		{
+			if [[ ! "$1" || ! "$2" ]]; then
+				error_exit __P_VAR "" __ERR_PARAM_NULL; fi
+
+			for __VarName in "${@:2}"; do
+				unset -f $1.$__VarName; unset struct_$1_$__VarName; done
+			
+			return 0
+			
+		}
+
+		function struct.__SetOrGet()
+		{
+			if [ ${#@} -gt 3 ]; then
+				error_exit __P_PARAM "${*:4}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [[ "$2" && "$2" != "=" ]]; then
+				error_exit __P_VOID "$1" __ERR_OP_ATTR
+			elif [ ! "$2" ]; then
+				local -n __ref="$1"
+				printf "%s\n" "$__ref"
+			else
+				local -n __ref="$1"
+				__ref="$3"
+			fi
+			
+			return 0
+		}
+				
+		function struct.list()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			eval echo '${!struct_'$1'_*}' | sed "s/struct_//g;s/_/./g;s/ /\n/g"
+		
+			return 0	
+		}
+
+		function struct.values()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			eval echo "\"$(eval echo '${!struct_'$1'_*}' | sed "s/ /\n$/g;s/^/$/")\""	
+			return 0
+		}
+
+		function struct.copy()
+		{
+			if [ ${#@} -gt 2 ]; then
+				error_exit __P_PARAM "${*:3}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			elif [ ! "$2" ]; then
+				error_exit __P_VAR "$2" __ERR_PARAM_NULL
+			fi
+			
+			local __struct
+			struct $2
+			
+			for __struct in $($1.list); do
+            __var="$(echo "$__struct" | cut -d'.' -f2)";  $2.add "$__var"
+            eval "struct_$2"_"$__var=\"\$struct_$1"_"$__var"\"; done
+
+	        return 0
+			
+		}
+		
+		function struct.clear()
+		{
+			if [ ${#@} -gt 1 ]; then
+				error_exit __P_PARAM "${*:2}" __ERR_MANY_PARAM
+			elif [ ! "$1" ]; then
+				error_exit __P_VAR "$1" __ERR_PARAM_NULL
+			fi
+			
+			for __var in $(eval echo \${!struct_$1_*}); do
+				eval $__var=''; done
+		
+			return 0	
+		}
+			
+		############  Propriedades da classe  #################
+        # Variáveis
+        readonly __STRUCT_CLASS_INIT=0
+        readonly __STRUCT_CLASS_NAME='struct'
+        readonly __STRUCT_CLASS_TYPE="Class: @$__STRUCT_CLASS_NAME"
+
+        # Instruções reservadas.
+        readonly -f struct.__init__ struct.__del__ struct.__type__
+
+        return 0
+	fi
+	
+	# Inicia uma nova classe
+	struct.__init__ $@
+}
+
+# Inicializa as classes e seus métodos reservados.
+var
+array
+dict
+struct
+
+# Mètodos somente leitura.
+readonly -f "${__TYPES_LIST[@]}"
+readonly -f types.__INIT__ \
+			types.__NAME__ \
+			types.__LIST__ \
+			types.__CONST__

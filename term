@@ -1,0 +1,349 @@
+#!/bin/bash
+
+source me
+
+if term.__INIT__ 2>/dev/null; then
+	return 1; fi
+
+function term.__INIT__() { return 0; }
+function term.__NAME__() { printf "%s\n" "$__TERM_LIB__"; }
+function term.__LIST__() { printf "%s\n" ${__TERM_LIST[*]}; }
+
+declare -r __TERM_LIB__=term
+
+declare -ra __TERM_LIST__=(
+$__TERM_LIB__.size.cols
+$__TERM_LIB__.size.lines
+$__TERM_LIB__.possave
+$__TERM_LIB__.posrestore
+$__TERM_LIB__.afterclear
+$__TERM_LIB__.reverse
+$__TERM_LIB__.default
+$__TERM_LIB__.reset
+$__TERM_LIB__.clear
+$__TERM_LIB__.pos.y
+$__TERM_LIB__.pos.x
+$__TERM_LIB__.readkey
+$__TERM_LIB__.readline
+$__TERM_LIB__.title
+$__TERM_LIB__.text
+$__TERM_LIB__.size
+$__TERM_LIB__.pos
+$__TERM_LIB__.cursor
+$__TERM_LIB__.background
+$__TERM_LIB__.foreground
+$__TERM_LIB__.bold
+$__TERM_LIB__.underline
+$__TERM_LIB__.align
+$__TERM_LIB__.space
+$__TERM_LIB__.tab
+$__TERM_LIB__.readpasswd
+$__TERM_LIB__.beep
+$__TERM_LIB__.__NAME__
+$__TERM_LIB__.__INIT__
+$__TERM_LIB__.__LIST__
+)
+# Cores
+declare -ir E_UNDERLINE=4
+declare -ir E_BLINK=5
+declare -ir E_BOLD=1
+declare -ir E_REVERSE=7
+declare -ir E_HIDE=8
+declare -ir E_NONE=2
+
+declare -ir C_BLACK=0
+declare -ir C_RED=1
+declare -ir C_GREEN=2
+declare -ir C_YELLOW=3
+declare -ir C_BLUE=4
+declare -ir C_PURPLE=5
+declare -ir C_CYAN=6
+declare -ir C_WHITE=7
+
+declare -ir A_LEFT=1
+declare -ir A_CENTER=2
+declare -ir A_RIGHT=3
+declare -ir A_VERTICAL=4
+
+function term.size.cols(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Não requer argumentos."; tput cols; return 0; }
+function term.size.lines(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Não requer argumentos."; tput lines; return 0; }
+function term.possave(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput sc; return 0; }
+function term.posrestore(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput rc; return 0; }
+function term.afterclear(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput ed; return 0; }
+function term.reverse(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput rev; return 0; }
+function term.default(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput sgr0; return 0; }
+function term.reset(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput reset; return 0; }
+function term.clear(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; tput clear; return 0; }
+function term.pos.y(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; local py=$(term.pos); echo ${py#*x}; return 0; }
+function term.pos.x(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; local px=$(term.pos); echo ${px%x*}; return 0; }
+function term.readkey(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "Nâo requer argumentos."; read -n1; return 0; }
+function term.readline(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "'$FUCNAME' Não requer argumentos."; local Str; read -e Str; echo $Str; return 0; }
+function term.readpasswd(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "'$FUCNAME' Não requer argumentos."; local Str; read -e -s Str; echo $Str; return 0; }
+function term.beep(){ [ "$1" ] && error_exit $BASH_LINENO $FUNCNAME "'$FUCNAME' Não requer argumentos."; echo -en "\a"; return 0; }
+
+function term.title()
+{
+#	if [ ${#*} -gt 2 ]; then
+#		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+#	elif [ "$1" != "=" ]; then
+ #       error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+#	elif [ ! "$2" ]; then
+ #       error_exit $BASH_LINENO $FUNCNAME "Título: Não pode ser nulo."
+#	fi
+
+    ORIG=$PS1
+ 	TITLE="\[\e]2;$*\a\]"
+ 	PS1=${ORIG}${TITLE}
+	sleep 20
+	return 0
+}
+
+function term.text()
+{
+	if [ ${#*} -gt 4 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:5}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Texto: Não pode ser nulo."
+	elif [[ "$2" && "$2" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Cor do texto: '$2' Requer um inteiro positivo."
+	elif [[ "$3" && "$3" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Cor de Fundo: '$3' Requer um inteiro positivo."
+	elif [[ "$4" && "$4" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Efeito: '$4' Requer um inteiro positivo."
+	fi
+	
+	echo -e "\033[$((${3:--40}+40));$((${2:-$C_WHITE}+30));${4:-$E_NONE}m$1\033[m"
+
+	return 0	
+}
+
+function term.size()
+{	
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		stty size | awk '{print $2"x"$1}'; return 0
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [ ! "$2" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Tamanho: Não pode ser nulo."
+	elif [[ ! "$2" =~ ^[0-9]{1,}[x]{1}[0-9]{1,}$ ]]; then
+        error_exit $BASH_LINENO $FUNCNAME "'$2' Valor inválido."
+	fi
+	
+	stty cols ${2%x*} rows ${2#*x}
+
+	return 0
+}
+
+
+function term.pos()
+{
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		local Pos Row Col
+		local OldStty IFSbkp
+
+		OldStty=$(stty -g)
+
+		stty raw -echo min 0
+
+		echo -en "\033[6n" > /dev/tty
+		IFS=';' read -r -d R -a Pos
+
+		stty $OldStty
+		
+		Row=$((${Pos[0]:2} - 1)) 
+		Col=$((${Pos[1]} - 1))
+		
+		printf "%sx%s\n" "$Col" "$Row"
+
+		return 0	
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [ ! "$2"  ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Coordenadas: Não pode ser nula."
+	elif [[ ! "$2" =~ ^[0-9]{1,}[x]{1}[0-9]{1,}$ ]]; then
+        error_exit $BASH_LINENO $FUNCNAME "'$2' Valor inválido."
+	fi
+
+	tput cup ${2#*x} ${2%x*}
+		
+	return 0
+}
+
+
+function term.cursor()
+{
+	local IFSbkp=$IFS
+
+	unset IFS
+	
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ "$2" != ?(true|false) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Valor: Requer tipo boolean."
+	fi
+
+	[ "$2" == "true" ] && tput cnorm || tput civis
+
+	export IFS=$IFSbkp
+
+	return 0
+
+}
+	
+function term.background()
+{
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ "$2" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Cor: '$2' Requer um inteiro positivo."
+	fi
+	
+	tput setab $2 2>/dev/null
+
+	return 0
+}
+
+function term.foreground()
+{
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ "$2" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Cor: '$2' Requer um inteiro positivo."
+	fi
+	
+	tput setaf $2 2>/dev/null
+
+	return 0
+}
+
+function term.bold()
+{
+	local IFSbkp=$IFS
+
+	unset IFS
+
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ ! "$2" || "$2" != ?(true|false) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Valor: Requer tipo boolean."
+	fi
+	
+	[ "$2" == "true" ] && tput bold || tput sgr0
+	
+	export IFS=$IFSbkp
+
+	return 0
+}
+
+function term.underline()
+{
+	local IFSbkp=$IFS
+
+	IFS=''
+
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ ! "$2" || "$2" != ?(true|false) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Valor: Requer tipo boolean."
+	fi
+	
+	[ "$2" == "true" ] && tput smul || tput rmul
+
+	IFS=$IFSbkp
+
+	return 0
+}
+
+function term.align()
+{
+	 if [ ${#*} -gt 2 ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+    elif [ ! "$1" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "Texto: Não pode ser nulo."
+    elif [[ "$2" != ?(+)+([0-9]) ]]; then
+        error_exit $BASH_LINENO $FUNCNAME "Alinhamento: Requer um inteiro positivo."
+    fi
+	
+	case "$2" in
+		$A_LEFT)
+        	printf "%s\n" "$1" | sed 's/\(^ \{2,\}\|\t\)//g'
+			;;
+		$A_RIGHT)
+        	printf "%s\n" "$1" | sed 's/\(^ \{2,\}\|\t\)//g;s/\( \{2,\}\|\t\)$//g' | sed -e :a -e "s/^.\{1,$(($(tput cols) - 1))\}$/ &/;ta" 
+			;;
+		$A_CENTER)
+        	printf "%s\n" "$1" | sed 's/\( \{2,\}\|\t\)/ /g' | sed -e :a -e "s/^.\{1,$(($(tput cols) - 2))\}$/ & /;ta"
+			;;
+		$A_VERTICAL)
+			printf "%s\n" "$1" | sed 's/./&\n/g'
+			;;
+		*)
+			printf "%s\n" "$1"
+			;;
+	esac
+			
+	return 0 
+}
+
+function term.space()
+{
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ "$1" != "=" ]; then
+        error_exit $BASH_LINENO $FUNCNAME "'=' Requer operador de atribuição."
+	elif [[ "$2" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Valor: Requer um inteiro positivo."
+	fi
+	
+	tput cuf $2
+
+	return 0
+}
+
+function term.tab()
+{
+	if [ ${#*} -gt 2 ]; then
+		error_exit $BASH_LINENO $FUNCNAME "'${*:3}' Excesso de argumentos."
+	elif [ ! "$1" ]; then
+		error_exit $BASH_LINENO $FUNCNAME "Texto: Não pode ser nulo."
+	elif [[ ! "$2" || "$2" != ?(+)+([0-9]) ]]; then
+		error_exit $BASH_LINENO $FUNCNAME "Tabulação: Requer um inteiro positivo."
+	fi
+	
+	local IFSbkp=$IFS
+	local y=$(term.pos.y) l=0 tab=0
+	local lw=$(($(tput cols)/$2-2))
+	local lpt=$(($(echo -e "$1" | fold -w$lw | wc -l)/$2+1))
+	
+	unset IFS
+
+	for line in $(seq 1 $lpt); do
+		x=1; l=$line; ((y++))
+		for tab in $(seq 1 $2); do
+			if [ $y -gt $(tput lines) ]; then printf "\n"; y=$(tput lines); fi
+			tput cup $y $x;	printf "%s" "$(sed -n $l'p' <(echo "$1" | fold -w$lw))"
+			x=$((x+2+$lw)); l=$((l+lpt))
+		done
+	done
+	
+	export IFS=$IFSbkp; echo
+	
+	return 0
+}
+
+declare -rf ${__TERM_LIST__[*]}
+
